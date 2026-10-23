@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Extenso",
+  "version": "0.1.0",
+  "description": "Personal browser customization: new tab redirect, bookmarklets, Siphon, dark mode, declutter, and relay.",
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+
+  "options_page": "options/options.html",
+  "devtools_page": "devtools/devtools.html",
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "userScripts",
+    "webRequest",
+    "cookies",
+    "notifications",
+    "offscreen",
+    "clipboardWrite",
+    "contextMenus"
+  ],
+
+  "host_permissions": ["<all_urls>"]
+}
