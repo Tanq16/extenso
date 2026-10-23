@@ -1,0 +1,55 @@
+body {
+  padding: 12px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.requests {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.requests button {
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+  background-color: var(--mantle);
+}
+
+.requests button[aria-selected="true"] {
+  background-color: var(--surface0);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.item {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  background-color: var(--base);
+}
+
+.kv {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.kv .mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

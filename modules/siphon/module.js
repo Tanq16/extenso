@@ -4,6 +4,6 @@ globalThis.extenso.modules.siphon = {
   label: 'Siphon',
   defaults: {
     settings: { enabled: true, rules: [] },
-    state: {},
+    state: { captures: {} },
   },
 };
