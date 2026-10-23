@@ -4,6 +4,6 @@ globalThis.extenso.modules.scripts = {
   label: 'Scripts',
   defaults: {
     settings: { enabled: true, items: [] },
-    state: {},
+    state: { synced: false, errors: {} },
   },
 };
