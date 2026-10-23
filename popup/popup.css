@@ -1,0 +1,9 @@
+body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 560px;
+  max-width: 640px;
+  min-height: 440px;
+  padding: 16px;
+}
