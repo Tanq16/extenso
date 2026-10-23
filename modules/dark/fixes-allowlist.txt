@@ -1,0 +1,11 @@
+google.com
+googleusercontent.com
+youtube.com
+github.com
+githubusercontent.com
+wikipedia.org
+wikimedia.org
+reddit.com
+stackoverflow.com
+stackexchange.com
+amazon.com
