@@ -1,4 +1,5 @@
 (() => {
+  const google = ['https://www.google.com/search*', 'https://www.google.ca/search*'];
   const builtins = [
     {
       id: 'amazon-sponsored',
@@ -8,9 +9,12 @@
       matches: [
         'https://www.amazon.com/s?*',
         'https://www.amazon.com/s/*',
+        'https://www.amazon.ca/s?*',
+        'https://www.amazon.ca/s/*',
       ],
       hide: [
         '.s-result-item.AdHolder',
+        '.s-result-item:has(.puis-sponsored-label-text)',
         '.s-result-item.s-widget:has(.s-widget-sponsored-label-text)',
         '.a-carousel-card:has(.puis-sponsored-label-text)',
       ],
@@ -21,7 +25,7 @@
       site: 'Google Search',
       name: 'Sponsored results',
       enabled: false,
-      matches: ['https://www.google.com/search*'],
+      matches: google,
       hide: [
         '#tads',
         '#bottomads',
@@ -33,7 +37,7 @@
       site: 'Google Search',
       name: 'AI Overview',
       enabled: false,
-      matches: ['https://www.google.com/search*'],
+      matches: google,
       hide: ['.M8OgIe'],
       remove: [],
     },
@@ -42,12 +46,27 @@
       site: 'Google Search',
       name: 'People also ask',
       enabled: false,
-      matches: ['https://www.google.com/search*'],
+      matches: google,
       hide: [
         'div.MjjYud:has(.related-question-pair)',
         'div[data-initq]',
       ],
       remove: [],
+    },
+    {
+      id: 'google-two-columns',
+      site: 'Google Search',
+      name: 'Results in two columns on wide screens',
+      enabled: false,
+      matches: google,
+      hide: [],
+      remove: [],
+      css: `@media (min-width: 1800px) {
+  #rcnt:has(#rso .MjjYud ~ .MjjYud) #center_col { grid-column: 2 / -2 !important; max-width: none !important; }
+  #rcnt:has(#rso .MjjYud ~ .MjjYud) #rhs { grid-column: -2 / -1 !important; max-width: 372px; }
+  #rso:has(.MjjYud ~ .MjjYud) { columns: 2; column-gap: 48px; }
+  #rso :is(.MjjYud, .ULSxyf) { break-inside: avoid; }
+}`,
     },
     {
       id: 'reddit-promoted',
