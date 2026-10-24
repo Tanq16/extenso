@@ -3,8 +3,10 @@
   const { match, storage, modules } = globalThis.extenso;
   const { isSelector, rulesOf } = modules.declutter;
   const style = document.createElement('style');
+  const moved = new Map();
   let hide = '';
   let remove = '';
+  let moves = [];
   let removed = 0;
 
   const sweep = (root) => {
@@ -15,12 +17,37 @@
     }
   };
 
+  const relocate = () => {
+    for (const { selector, to } of moves) {
+      const element = document.querySelector(selector);
+      const target = document.querySelector(to);
+      if (!element || !target || target.firstElementChild === element || element.contains(target)) continue;
+      if (!moved.has(element)) {
+        const placeholder = document.createComment('');
+        element.before(placeholder);
+        moved.set(element, placeholder);
+      }
+      target.prepend(element);
+    }
+  };
+
+  const restore = () => {
+    for (const [element, placeholder] of moved) {
+      if (moves.some(({ selector }) => element.matches(selector))) continue;
+      placeholder.replaceWith(element);
+      moved.delete(element);
+    }
+  };
+
   const observer = new MutationObserver((records) => {
-    for (const { addedNodes } of records) {
-      for (const node of addedNodes) {
-        if (node.nodeType === Node.ELEMENT_NODE && node.isConnected) sweep(node);
+    if (remove) {
+      for (const { addedNodes } of records) {
+        for (const node of addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE && node.isConnected) sweep(node);
+        }
       }
     }
+    relocate();
   });
 
   const apply = (settings) => {
@@ -30,13 +57,16 @@
     const hidden = active.flatMap((rule) => rule.hide).filter(isSelector);
     hide = hidden.join(', ');
     remove = active.flatMap((rule) => rule.remove).filter(isSelector).join(', ');
+    moves = active.flatMap((rule) => rule.move ?? []).filter(({ selector, to }) => isSelector(selector) && isSelector(to));
     style.textContent = [
       ...hidden.map((selector) => `${selector} { display: none !important; }`),
       ...active.flatMap((rule) => rule.css ?? []),
     ].join('\n');
     observer.disconnect();
-    if (!remove) return;
-    sweep(document);
+    restore();
+    if (!remove && !moves.length) return;
+    if (remove) sweep(document);
+    relocate();
     observer.observe(document, { childList: true, subtree: true });
   };
 

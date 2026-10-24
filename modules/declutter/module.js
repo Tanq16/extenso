@@ -1,5 +1,9 @@
 (() => {
   const google = ['https://www.google.com/search*', 'https://www.google.ca/search*'];
+  const googleColumns = (scope) => `  ${scope} { grid-template-columns: minmax(0, 260px) minmax(0, 1fr) auto !important; padding-right: 44px; }
+  ${scope} > #center_col { grid-column: 2 !important; max-width: none !important; }
+  ${scope} #rso { columns: 620px; column-gap: 64px; }
+  ${scope} #rso :is(.MjjYud, .ULSxyf, .SLPe5b) { break-inside: avoid; }`;
   const builtins = [
     {
       id: 'amazon-sponsored',
@@ -56,16 +60,18 @@
     {
       id: 'google-two-columns',
       site: 'Google Search',
-      name: 'Results in two columns on wide screens',
+      name: 'Results in columns on wide screens',
       enabled: false,
       matches: google,
       hide: [],
       remove: [],
-      css: `@media (min-width: 1800px) {
-  #rcnt:has(#rso .MjjYud ~ .MjjYud) #center_col { grid-column: 2 / -2 !important; max-width: none !important; }
-  #rcnt:has(#rso .MjjYud ~ .MjjYud) #rhs { grid-column: -2 / -1 !important; max-width: 372px; }
-  #rso:has(.MjjYud ~ .MjjYud) { columns: 2; column-gap: 48px; }
-  #rso :is(.MjjYud, .ULSxyf) { break-inside: avoid; }
+      move: [{ selector: ':is(.SLPe5b, #rso .ULSxyf):has(#eKIzJc)', to: '#rso' }],
+      css: `@media (min-width: 1648px) {
+${googleColumns('#rcnt:not(:has(#rhs)):has(#rso .MjjYud ~ .MjjYud)')}
+}
+@media (min-width: 2064px) {
+${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
+  #rcnt:has(#rso .MjjYud ~ .MjjYud) > #rhs { grid-column: 3 !important; width: 372px; margin-left: 44px; }
 }`,
     },
     {
