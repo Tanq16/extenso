@@ -13,6 +13,7 @@ const preview = (value) => (value.length > 80 ? `${value.slice(0, 80)}…` : val
 export async function render(container) {
   const status = h('p', { className: 'status' });
   const list = h('ul', { className: 'list' });
+  const empty = h('p', { className: 'empty' }, 'Nothing captured yet.');
 
   const copy = async (button, value) => {
     try {
@@ -27,25 +28,18 @@ export async function render(container) {
   const draw = async () => {
     const rows = await messages.send('siphon', 'list');
     const captured = rows.filter((row) => row.value != null);
-    list.replaceChildren();
-    if (!captured.length) {
-      list.append(h('li', {}, h('span', { className: 'empty grow' }, 'Nothing captured yet.')));
-      return;
-    }
-    for (const row of captured) {
-      list.append(
-        h('li', {},
-          h('div', { className: 'grow stack' },
-            h('div', { className: 'row' },
-              h('strong', {}, row.name),
-              h('span', { className: 'muted' }, when(row.at)),
-            ),
-            h('span', { className: 'mono muted truncate' }, preview(row.value)),
-          ),
-          h('button', { type: 'button', className: 'small', onclick: (event) => copy(event.target, row.value) }, 'Copy'),
+    list.replaceChildren(...captured.map((row) => h('li', {},
+      h('div', { className: 'grow stack' },
+        h('div', { className: 'row' },
+          h('strong', {}, row.name),
+          h('span', { className: 'muted' }, when(row.at)),
         ),
-      );
-    }
+        h('span', { className: 'mono muted truncate' }, preview(row.value)),
+      ),
+      h('button', { type: 'button', className: 'small', onclick: (event) => copy(event.target, row.value) }, 'Copy'),
+    )));
+    list.hidden = !captured.length;
+    empty.hidden = Boolean(captured.length);
   };
 
   const clearAll = async () => {
@@ -69,6 +63,7 @@ export async function render(container) {
         ),
       ),
       list,
+      empty,
     ),
     status,
   );
