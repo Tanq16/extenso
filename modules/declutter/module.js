@@ -432,7 +432,7 @@
   globalThis.extenso.modules.declutter = {
     label: 'Declutter',
     defaults: {
-      settings: { enabled: false, rules: [], builtins: {} },
+      settings: { enabled: false, rules: [], builtins: {}, disabledHosts: [] },
       state: {},
     },
     normalize,

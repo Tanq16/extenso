@@ -8,7 +8,13 @@ import { openOptions } from '../../ui/tabs.js';
 const { storage, match, messages, modules } = globalThis.extenso;
 const { normalize, rulesOf, withEnabled } = modules.declutter;
 
+const hostOf = (tab) => {
+  const url = URL.parse(tab?.url ?? '');
+  return url && ['http:', 'https:'].includes(url.protocol) ? url.hostname : null;
+};
+
 export async function render(container, tab) {
+  const host = hostOf(tab);
   let settings = normalize(await storage.getSettings('declutter'));
   const matching = () => rulesOf(settings).filter((rule) => match.matchesAny(rule.matches, tab?.url ?? ''));
   const rules = matching();
@@ -17,7 +23,7 @@ export async function render(container, tab) {
 
   const refresh = async () => {
     count.hidden = true;
-    if (!settings.enabled || !matching().some((rule) => rule.enabled)) return;
+    if (!settings.enabled || settings.disabledHosts.includes(host) || !matching().some((rule) => rule.enabled)) return;
     try {
       const { hidden, removed } = await messages.send('declutter', 'apply', { tabId: tab.id });
       count.textContent = `${hidden} hidden and ${removed} removed on this page.`;
@@ -42,9 +48,17 @@ export async function render(container, tab) {
     return input;
   };
 
+  const setSite = (checked) => {
+    const others = settings.disabledHosts.filter((other) => other !== host);
+    return save({ ...settings, disabledHosts: checked ? others : [...others, host] });
+  };
+
   container.append(
     h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Declutter pages', toggle(settings.enabled, (checked) => save({ ...settings, enabled: checked }))),
+      h('label', { className: 'row' }, 'Declutter pages', toggle(settings.enabled, (checked) => save({ ...settings, enabled: checked })))),
+    h('section', { className: 'card' },
+      host && h('h2', { className: 'truncate' }, host),
+      host && h('label', { className: 'row' }, 'Declutter this site', toggle(!settings.disabledHosts.includes(host), setSite)),
       rules.length
         ? h('ul', { className: 'list' }, rules.map((rule) => h('li', {},
           h('span', { className: 'grow truncate' }, rule.name),

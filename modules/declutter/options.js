@@ -8,9 +8,17 @@ const { isSelector, normalize, builtinsOf, withEnabled } = modules.declutter;
 
 const lines = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
+const fill = (list, empty, items) => {
+  list.replaceChildren(...items);
+  list.hidden = !items.length;
+  empty.hidden = Boolean(items.length);
+};
+
 export async function render(container) {
   let settings = normalize(await storage.getSettings('declutter'));
   const status = h('p', { className: 'status' });
+  const sites = h('ul', { className: 'list' });
+  const noSites = h('p', { className: 'empty' }, 'No sites turned off. Turn one off from the popup.');
   const builtins = h('div', { className: 'stack' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'No rules yet.');
@@ -99,6 +107,18 @@ export async function render(container) {
 
   const draw = () => {
     enabled.checked = settings.enabled;
+    fill(sites, noSites, settings.disabledHosts.toSorted().map((host) => h('li', {},
+      h('span', { className: 'grow mono truncate' }, host),
+      h('button', {
+        type: 'button',
+        className: 'small',
+        'aria-label': `Turn on Declutter for ${host}`,
+        onclick: () => persist(
+          { ...settings, disabledHosts: settings.disabledHosts.filter((other) => other !== host) },
+          `Declutter on for ${host}.`,
+        ),
+      }, 'Turn on'),
+    )));
     builtins.replaceChildren(...[...Map.groupBy(builtinsOf(settings), (rule) => rule.site)].map(([site, rules]) => h('div', { className: 'stack' },
       h('div', { className: 'row' },
         h('h3', {}, site),
@@ -108,7 +128,7 @@ export async function render(container) {
         h('span', { className: 'grow' }, rule.name),
       ))),
     )));
-    list.replaceChildren(...settings.rules.map((rule) => h('li', {},
+    fill(list, empty, settings.rules.map((rule) => h('li', {},
       ruleToggle(rule),
       h('span', {}, rule.name),
       h('span', { className: 'muted mono grow truncate' }, rule.matches.join('  ')),
@@ -122,8 +142,6 @@ export async function render(container) {
         },
       }, 'Delete'),
     )));
-    list.hidden = !settings.rules.length;
-    empty.hidden = !!settings.rules.length;
   };
 
   chrome.storage.onChanged.addListener(async (changes, area) => {
@@ -138,6 +156,7 @@ export async function render(container) {
 
   container.append(
     h('section', { className: 'card' }, h('label', { className: 'row' }, 'Declutter pages', enabled)),
+    h('section', { className: 'card' }, h('h2', {}, 'Sites turned off'), sites, noSites),
     h('section', { className: 'card' }, h('h2', {}, 'Built-in rules'), builtins),
     h('section', { className: 'card' },
       h('h2', {}, 'Your rules'),

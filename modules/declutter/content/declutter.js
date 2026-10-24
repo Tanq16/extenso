@@ -24,7 +24,7 @@
   });
 
   const apply = (settings) => {
-    const active = settings.enabled
+    const active = settings.enabled && !settings.disabledHosts.includes(location.hostname)
       ? rulesOf(settings).filter((rule) => rule.enabled && match.matchesAny(rule.matches, location.href))
       : [];
     const hidden = active.flatMap((rule) => rule.hide).filter(isSelector);
