@@ -84,7 +84,7 @@ Set the redirect URL on the options page. A URL without a scheme gets `https://`
 
 | Field | Values |
 |---|---|
-| Code | Raw JavaScript, or a pasted `javascript:` bookmarklet URL, which is decoded |
+| Code | Raw JavaScript, or a pasted `javascript:` bookmarklet URL, which is decoded and switches World to Main |
 | Trigger | Manual or Automatic |
 | World | User script (isolated) or Main (page), which shares the page's JavaScript globals |
 | Run at | Document idle, end, or start, for automatic scripts only |

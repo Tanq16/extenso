@@ -22,7 +22,6 @@ const blank = () => ({
 });
 
 const decode = (code) => {
-  if (!BOOKMARKLET.test(code)) return code;
   const body = code.replace(BOOKMARKLET, '');
   try {
     return decodeURIComponent(body);
@@ -85,7 +84,7 @@ export async function render(container) {
     rows: 22,
     spellcheck: false,
     placeholder: 'Code, or a pasted javascript: bookmarklet URL',
-    onchange: () => { code.value = decode(code.value); },
+    onchange: () => unpack(),
   });
   const trigger = select([['manual', 'Manual'], ['auto', 'Automatic']]);
   const world = select([['USER_SCRIPT', 'User script (isolated)'], ['MAIN', 'Main (page)']]);
@@ -93,6 +92,13 @@ export async function render(container) {
   const matches = h('textarea', { className: 'code', rows: 3, spellcheck: false, placeholder: 'https://github.com/settings/*' });
   const title = h('h2', { className: 'grow' });
   trigger.addEventListener('change', () => { runAt.disabled = trigger.value !== 'auto'; });
+
+  const unpack = () => {
+    if (!BOOKMARKLET.test(code.value)) return;
+    code.value = decode(code.value);
+    world.value = 'MAIN';
+    setStatus(formStatus, 'Decoded the bookmarklet and set World to Main (page), where bookmarklets run.', 'info');
+  };
 
   const customize = async (script, target) => {
     try {
@@ -188,7 +194,7 @@ export async function render(container) {
 
   const submit = async (event) => {
     event.preventDefault();
-    code.value = decode(code.value);
+    unpack();
     const patterns = matches.value.split('\n').map((line) => line.trim()).filter(Boolean);
     const invalid = patterns.filter((pattern) => !match.isValid(pattern));
     if (!code.value.trim()) return setStatus(formStatus, 'Add the script\'s code.', 'error');
