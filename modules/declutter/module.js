@@ -54,6 +54,21 @@
       remove: [],
     },
     {
+      id: 'google-two-columns',
+      site: 'Google Search',
+      name: 'Results in two columns on wide screens',
+      enabled: false,
+      matches: google,
+      hide: [],
+      remove: [],
+      css: `@media (min-width: 1800px) {
+  #rcnt:has(#rso .MjjYud ~ .MjjYud) #center_col { grid-column: 2 / -2 !important; max-width: none !important; }
+  #rcnt:has(#rso .MjjYud ~ .MjjYud) #rhs { grid-column: -2 / -1 !important; max-width: 372px; }
+  #rso:has(.MjjYud ~ .MjjYud) { columns: 2; column-gap: 48px; }
+  #rso :is(.MjjYud, .ULSxyf) { break-inside: avoid; }
+}`,
+    },
+    {
       id: 'reddit-promoted',
       site: 'Reddit',
       name: 'Promoted posts and sidebar ads',

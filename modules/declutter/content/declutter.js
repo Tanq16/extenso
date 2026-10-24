@@ -30,7 +30,10 @@
     const hidden = active.flatMap((rule) => rule.hide).filter(isSelector);
     hide = hidden.join(', ');
     remove = active.flatMap((rule) => rule.remove).filter(isSelector).join(', ');
-    style.textContent = hidden.map((selector) => `${selector} { display: none !important; }`).join('\n');
+    style.textContent = [
+      ...hidden.map((selector) => `${selector} { display: none !important; }`),
+      ...active.flatMap((rule) => rule.css ?? []),
+    ].join('\n');
     observer.disconnect();
     if (!remove) return;
     sweep(document);
