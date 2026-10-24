@@ -1,7 +1,7 @@
 (() => {
   if (globalThis.extenso.declutter) return;
   const { match, storage, modules } = globalThis.extenso;
-  const { isSelector } = modules.declutter;
+  const { isSelector, rulesOf } = modules.declutter;
   const style = document.createElement('style');
   let hide = '';
   let remove = '';
@@ -23,8 +23,10 @@
     }
   });
 
-  const apply = ({ enabled, rules }) => {
-    const active = enabled ? rules.filter((rule) => rule.enabled && match.matchesAny(rule.matches, location.href)) : [];
+  const apply = (settings) => {
+    const active = settings.enabled
+      ? rulesOf(settings).filter((rule) => rule.enabled && match.matchesAny(rule.matches, location.href))
+      : [];
     const hidden = active.flatMap((rule) => rule.hide).filter(isSelector);
     hide = hidden.join(', ');
     remove = active.flatMap((rule) => rule.remove).filter(isSelector).join(', ');

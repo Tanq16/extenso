@@ -5,17 +5,19 @@ import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
 import { openOptions } from '../../ui/tabs.js';
 
-const { storage, match, messages } = globalThis.extenso;
+const { storage, match, messages, modules } = globalThis.extenso;
+const { normalize, rulesOf, withEnabled } = modules.declutter;
 
 export async function render(container, tab) {
-  const settings = await storage.getSettings('declutter');
-  const rules = settings.rules.filter((rule) => match.matchesAny(rule.matches, tab?.url ?? ''));
+  let settings = normalize(await storage.getSettings('declutter'));
+  const matching = () => rulesOf(settings).filter((rule) => match.matchesAny(rule.matches, tab?.url ?? ''));
+  const rules = matching();
   const count = h('p', { className: 'muted', hidden: true });
   const status = h('p', { className: 'status' });
 
   const refresh = async () => {
     count.hidden = true;
-    if (!settings.enabled || !rules.some((rule) => rule.enabled)) return;
+    if (!settings.enabled || !matching().some((rule) => rule.enabled)) return;
     try {
       const { hidden, removed } = await messages.send('declutter', 'apply', { tabId: tab.id });
       count.textContent = `${hidden} hidden and ${removed} removed on this page.`;
@@ -25,9 +27,10 @@ export async function render(container, tab) {
     }
   };
 
-  const save = async () => {
+  const save = async (next) => {
     try {
-      await storage.updateSettings('declutter', { enabled: settings.enabled, rules: settings.rules });
+      await storage.updateSettings('declutter', next);
+      settings = next;
     } catch (error) {
       setStatus(status, error.message, 'error');
     }
@@ -41,17 +44,11 @@ export async function render(container, tab) {
 
   container.append(
     h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Declutter pages', toggle(settings.enabled, (checked) => {
-        settings.enabled = checked;
-        return save();
-      })),
+      h('label', { className: 'row' }, 'Declutter pages', toggle(settings.enabled, (checked) => save({ ...settings, enabled: checked }))),
       rules.length
         ? h('ul', { className: 'list' }, rules.map((rule) => h('li', {},
           h('span', { className: 'grow truncate' }, rule.name),
-          toggle(rule.enabled, (checked) => {
-            rule.enabled = checked;
-            return save();
-          }),
+          toggle(rule.enabled, (checked) => save(withEnabled(settings, rule.id, checked))),
         )))
         : h('p', { className: 'empty' }, 'No rules match this page.'),
       count,

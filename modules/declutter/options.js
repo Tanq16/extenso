@@ -4,13 +4,14 @@ import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
 
 const { storage, match, modules } = globalThis.extenso;
-const { isSelector } = modules.declutter;
+const { isSelector, normalize, builtinsOf, withEnabled } = modules.declutter;
 
 const lines = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
 export async function render(container) {
-  const settings = await storage.getSettings('declutter');
+  let settings = normalize(await storage.getSettings('declutter'));
   const status = h('p', { className: 'status' });
+  const builtins = h('div', { className: 'stack' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'No rules yet.');
   const title = h('h2', { className: 'grow' });
@@ -20,9 +21,10 @@ export async function render(container) {
   const remove = h('textarea', { className: 'code', spellcheck: false });
   let editing = null;
 
-  const persist = async (message) => {
+  const persist = async (next, message) => {
     try {
-      await storage.updateSettings('declutter', { enabled: settings.enabled, rules: settings.rules });
+      await storage.updateSettings('declutter', next);
+      settings = next;
       setStatus(status, message, 'success');
     } catch (error) {
       setStatus(status, error.message, 'error');
@@ -35,8 +37,18 @@ export async function render(container) {
     return input;
   };
 
+  const ruleToggle = (rule) => toggle(rule.enabled, (checked) => persist(
+    withEnabled(settings, rule.id, checked),
+    `${rule.name} ${checked ? 'on' : 'off'}.`,
+  ));
+
+  const enabled = toggle(settings.enabled, (checked) => persist(
+    { ...settings, enabled: checked },
+    checked ? 'Declutter on.' : 'Declutter off.',
+  ));
+
   const open = (rule) => {
-    editing = rule;
+    editing = rule?.id ?? null;
     title.textContent = rule ? 'Edit rule' : 'New rule';
     name.value = rule?.name ?? '';
     matches.value = rule?.matches.join('\n') ?? '';
@@ -69,10 +81,11 @@ export async function render(container) {
       setStatus(status, problem, 'error');
       return;
     }
-    if (editing) Object.assign(editing, rule);
-    else settings.rules.push({ id: crypto.randomUUID(), enabled: true, ...rule });
+    const rules = editing
+      ? settings.rules.map((other) => (other.id === editing ? { ...other, ...rule } : other))
+      : [...settings.rules, { id: crypto.randomUUID(), enabled: true, ...rule }];
     close();
-    persist(`Saved ${rule.name}.`);
+    persist({ ...settings, rules }, `Saved ${rule.name}.`);
   };
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: save },
@@ -85,11 +98,18 @@ export async function render(container) {
   );
 
   const draw = () => {
+    enabled.checked = settings.enabled;
+    builtins.replaceChildren(...[...Map.groupBy(builtinsOf(settings), (rule) => rule.site)].map(([site, rules]) => h('div', { className: 'stack' },
+      h('div', { className: 'row' },
+        h('h3', {}, site),
+        h('span', { className: 'badge' }, `${rules.filter((rule) => rule.enabled).length} of ${rules.length} on`)),
+      h('ul', { className: 'list' }, rules.map((rule) => h('li', {},
+        ruleToggle(rule),
+        h('span', { className: 'grow' }, rule.name),
+      ))),
+    )));
     list.replaceChildren(...settings.rules.map((rule) => h('li', {},
-      toggle(rule.enabled, (checked) => {
-        rule.enabled = checked;
-        persist(`${rule.name} ${checked ? 'on' : 'off'}.`);
-      }),
+      ruleToggle(rule),
       h('span', {}, rule.name),
       h('span', { className: 'muted mono grow truncate' }, rule.matches.join('  ')),
       h('button', { type: 'button', className: 'small', onclick: () => open(rule) }, 'Edit'),
@@ -97,9 +117,8 @@ export async function render(container) {
         type: 'button',
         className: 'small danger',
         onclick: () => {
-          settings.rules = settings.rules.filter((other) => other !== rule);
-          if (editing === rule) close();
-          persist(`Deleted ${rule.name}.`);
+          if (editing === rule.id) close();
+          persist({ ...settings, rules: settings.rules.filter((other) => other.id !== rule.id) }, `Deleted ${rule.name}.`);
         },
       }, 'Delete'),
     )));
@@ -107,12 +126,21 @@ export async function render(container) {
     empty.hidden = !!settings.rules.length;
   };
 
+  chrome.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== 'local' || !Object.hasOwn(changes, storage.settingsKey('declutter'))) return;
+    try {
+      settings = normalize(await storage.getSettings('declutter'));
+      draw();
+    } catch (error) {
+      setStatus(status, error.message, 'error');
+    }
+  });
+
   container.append(
+    h('section', { className: 'card' }, h('label', { className: 'row' }, 'Declutter pages', enabled)),
+    h('section', { className: 'card' }, h('h2', {}, 'Built-in rules'), builtins),
     h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Declutter pages', toggle(settings.enabled, (checked) => {
-        settings.enabled = checked;
-        persist(checked ? 'Declutter on.' : 'Declutter off.');
-      })),
+      h('h2', {}, 'Your rules'),
       list,
       empty,
       h('button', { type: 'button', className: 'primary', onclick: () => open(null) }, 'Add rule'),
