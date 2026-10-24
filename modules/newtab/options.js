@@ -15,23 +15,15 @@ export async function render(container) {
   const status = h('p', { className: 'status' });
   const input = h('input', { type: 'text', value: url, placeholder: 'https://example.com', spellcheck: false });
 
-  const save = async (event) => {
-    event.preventDefault();
+  input.addEventListener('change', async () => {
     input.value = normalize(input.value);
     try {
       await storage.updateSettings('newtab', { url: input.value });
-      setStatus(status, 'Saved.', 'success');
+      setStatus(status, input.value ? `New tabs open ${input.value}.` : 'Redirect URL cleared.', 'success');
     } catch (error) {
       setStatus(status, error.message, 'error');
     }
-  };
+  });
 
-  container.append(
-    await moduleCard('newtab'),
-    h('form', { className: 'card', onsubmit: save },
-      h('label', { className: 'field' }, 'Redirect URL', input),
-      h('button', { type: 'submit', className: 'primary' }, 'Save'),
-    ),
-    status,
-  );
+  container.append(await moduleCard('newtab', status, h('label', { className: 'field' }, 'Redirect URL', input)));
 }
