@@ -1,4 +1,5 @@
 (() => {
+  const google = ['https://www.google.com/search*', 'https://www.google.ca/search*'];
   const builtins = [
     {
       id: 'amazon-sponsored',
@@ -8,6 +9,8 @@
       matches: [
         'https://www.amazon.com/s?*',
         'https://www.amazon.com/s/*',
+        'https://www.amazon.ca/s?*',
+        'https://www.amazon.ca/s/*',
       ],
       hide: [
         '.s-result-item.AdHolder',
@@ -21,7 +24,7 @@
       site: 'Google Search',
       name: 'Sponsored results',
       enabled: false,
-      matches: ['https://www.google.com/search*'],
+      matches: google,
       hide: [
         '#tads',
         '#bottomads',
@@ -33,7 +36,7 @@
       site: 'Google Search',
       name: 'AI Overview',
       enabled: false,
-      matches: ['https://www.google.com/search*'],
+      matches: google,
       hide: ['.M8OgIe'],
       remove: [],
     },
@@ -42,7 +45,7 @@
       site: 'Google Search',
       name: 'People also ask',
       enabled: false,
-      matches: ['https://www.google.com/search*'],
+      matches: google,
       hide: [
         'div.MjjYud:has(.related-question-pair)',
         'div[data-initq]',
