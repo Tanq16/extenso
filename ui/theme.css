@@ -44,6 +44,8 @@ code, .mono { font-family: var(--mono); font-size: 13px; }
 .tabs button { flex: 1; white-space: nowrap; background-color: transparent; color: var(--subtext0); }
 .tabs button:hover { background-color: var(--base); color: var(--text); }
 .tabs button[aria-selected="true"] { background-color: var(--surface0); color: var(--text); }
+.tabs.pill { flex-wrap: nowrap; border-radius: 999px; }
+.tabs.pill button { padding-inline: 10px; border-radius: 999px; }
 
 [role="tabpanel"], .card, .stack { display: flex; flex-direction: column; gap: 12px; }
 :is([role="tabpanel"], .card, .stack) > button { align-self: flex-start; }
@@ -71,10 +73,20 @@ button.danger { background-color: rgba(243, 139, 168, 0.15); color: var(--red); 
 button.danger:hover { background-color: rgba(243, 139, 168, 0.28); }
 button.small { padding: 4px 12px; font-size: 13px; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
   outline: 2px solid var(--lavender);
   outline-offset: 2px;
 }
+
+button:has(> .icon) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  mask: var(--icon) center / contain no-repeat;
+}
+button.small .icon { width: 14px; height: 14px; }
 
 input:not([type="checkbox"], [type="radio"], [type="file"]), textarea, select {
   width: 100%;
@@ -90,6 +102,7 @@ input:not([type="checkbox"], [type="radio"], [type="file"]):focus, textarea:focu
   outline: none;
   background-color: var(--surface1);
 }
+input.narrow { width: 96px; flex-shrink: 0; }
 ::placeholder { color: var(--overlay0); }
 textarea { min-height: 96px; resize: vertical; }
 textarea.code { font-family: var(--mono); font-size: 13px; line-height: 1.6; tab-size: 2; }
@@ -131,6 +144,23 @@ input.toggle:checked::before { transform: translateX(18px); background-color: va
   border-radius: var(--radius-sm);
 }
 .card .list > li { background-color: var(--base); }
+
+.group > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  list-style: none;
+  background-color: var(--base);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary:hover { background-color: var(--surface0); }
+.group > summary .icon { transition: transform 0.15s; }
+.group[open] > summary .icon { transform: rotate(90deg); }
+.group > .list, .group > .status { margin: 4px 0 0 24px; }
 
 .badge {
   display: inline-block;

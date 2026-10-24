@@ -1,10 +1,12 @@
 import '../../lib/match.js';
 import '../../lib/storage.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { group, h, icon, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { availabilityNotice, runButton } from './ui.js';
 
-const { match, storage } = globalThis.extenso;
+const { match, storage, modules } = globalThis.extenso;
+const { builtinsOf, sourceOf } = modules.scripts;
 const BOOKMARKLET = /^\s*javascript:/i;
 const WEB_PAGE = /^(https?|file):/;
 
@@ -20,7 +22,6 @@ const blank = () => ({
 });
 
 const decode = (code) => {
-  if (!BOOKMARKLET.test(code)) return code;
   const body = code.replace(BOOKMARKLET, '');
   try {
     return decodeURIComponent(body);
@@ -43,33 +44,39 @@ const mutate = async (change) => {
   await storage.updateSettings('scripts', { items: change(items) });
 };
 
+const setBuiltin = async (id, enabled) => {
+  const { builtins } = await storage.getSettings('scripts');
+  await storage.updateSettings('scripts', { builtins: { ...builtins, [id]: enabled } });
+};
+
 const replace = (items, script) => items.some((item) => item.id === script.id)
   ? items.map((item) => (item.id === script.id ? script : item))
   : [...items, script];
 
 export async function render(container) {
   const status = h('p', { className: 'status' });
+  const formStatus = h('p', { className: 'status' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'No scripts yet.');
+  const listCard = h('section', { className: 'card' },
+    h('div', { className: 'row' },
+      h('h2', { className: 'grow' }, 'Your scripts'),
+      h('button', { type: 'button', className: 'small primary', onclick: () => open(blank(), 'New script') }, icon('plus'), 'New script'),
+    ),
+    list,
+    empty,
+    status,
+  );
   let editing = null;
 
-  const attempt = async (action, success) => {
+  const attempt = async (action, success, target = status) => {
     try {
       await action();
-      if (success) setStatus(status, success, 'success');
+      if (success) setStatus(target, success, 'success');
     } catch (error) {
-      setStatus(status, error.message, 'error');
+      setStatus(target, error.message, 'error');
     }
   };
-
-  const enabled = h('input', {
-    type: 'checkbox',
-    className: 'toggle',
-    onchange: () => attempt(
-      () => storage.updateSettings('scripts', { enabled: enabled.checked }),
-      enabled.checked ? 'Scripts on.' : 'Scripts off.',
-    ),
-  });
 
   const name = h('input', { type: 'text', placeholder: 'Untitled script', spellcheck: false });
   const code = h('textarea', {
@@ -77,7 +84,7 @@ export async function render(container) {
     rows: 22,
     spellcheck: false,
     placeholder: 'Code, or a pasted javascript: bookmarklet URL',
-    onchange: () => { code.value = decode(code.value); },
+    onchange: () => unpack(),
   });
   const trigger = select([['manual', 'Manual'], ['auto', 'Automatic']]);
   const world = select([['USER_SCRIPT', 'User script (isolated)'], ['MAIN', 'Main (page)']]);
@@ -86,17 +93,85 @@ export async function render(container) {
   const title = h('h2', { className: 'grow' });
   trigger.addEventListener('change', () => { runAt.disabled = trigger.value !== 'auto'; });
 
+  const unpack = () => {
+    if (!BOOKMARKLET.test(code.value)) return;
+    code.value = decode(code.value);
+    world.value = 'MAIN';
+    setStatus(formStatus, 'Decoded the bookmarklet and set World to Main (page), where bookmarklets run.', 'info');
+  };
+
+  const customize = async (script, target) => {
+    try {
+      open({
+        ...blank(),
+        name: `${script.name} copy`,
+        code: await sourceOf(script),
+        trigger: script.trigger,
+        world: script.world,
+        runAt: script.runAt,
+        matches: script.matches,
+      }, 'New script');
+    } catch (error) {
+      setStatus(target, error.message, 'error');
+    }
+  };
+
+  const builtinRow = (script, target) => {
+    const auto = script.trigger === 'auto';
+    const toggle = h('input', {
+      type: 'checkbox',
+      className: 'toggle',
+      onchange: () => attempt(() => setBuiltin(script.id, toggle.checked), `${script.name} ${toggle.checked ? 'on' : 'off'}.`, target),
+    });
+    const error = h('span', { className: 'badge error', hidden: true }, 'Not registered');
+    const element = h('li', {},
+      toggle,
+      h('div', { className: 'grow' },
+        h('h3', { className: 'truncate' }, script.name),
+        h('p', { className: 'muted' }, script.description),
+      ),
+      error,
+      script.world === 'MAIN' && h('span', { className: 'badge' }, 'Main world'),
+      h('span', { className: `badge ${auto ? 'info' : ''}` }, auto ? 'Automatic' : 'Manual'),
+      runButton(script, target, lastWebTab),
+      h('button', { type: 'button', className: 'small', onclick: () => customize(script, target) }, icon('copy-plus'), 'Customize'),
+    );
+    return { id: script.id, toggle, error, element };
+  };
+
+  const builtinGroups = [...Map.groupBy(builtinsOf(await storage.getSettings('scripts')), (script) => script.site)]
+    .map(([site, scripts]) => {
+      const groupStatus = h('p', { className: 'status' });
+      const rows = scripts.map((script) => builtinRow(script, groupStatus));
+      return { rows, ...group(site, rows.map(({ element }) => element), groupStatus) };
+    });
+  const builtinCard = h('section', { className: 'card' },
+    h('h2', {}, 'Built-in scripts'),
+    h('div', { className: 'list' }, builtinGroups.map(({ element }) => element)),
+  );
+
   const refresh = async () => {
     const [settings, { errors }] = await Promise.all([storage.getSettings('scripts'), storage.getState('scripts')]);
-    enabled.checked = settings.enabled;
     list.replaceChildren(...settings.items.map((script) => row(script, errors[script.id])));
-    list.hidden = Boolean(editing) || !settings.items.length;
-    empty.hidden = Boolean(editing) || settings.items.length > 0;
+    const enabled = new Map(builtinsOf(settings).map((script) => [script.id, script.enabled]));
+    for (const { rows, count } of builtinGroups) {
+      for (const { id, toggle, error } of rows) {
+        toggle.checked = enabled.get(id);
+        error.hidden = !errors[id];
+        error.title = errors[id] ?? '';
+      }
+      count(rows.filter(({ id }) => enabled.get(id)).length, rows.length);
+    }
+    listCard.hidden = Boolean(editing);
+    builtinCard.hidden = Boolean(editing);
+    list.hidden = !settings.items.length;
+    empty.hidden = settings.items.length > 0;
   };
 
   const open = (script, heading) => {
     editing = script;
     setStatus(status, '');
+    setStatus(formStatus, '');
     title.textContent = heading;
     name.value = script.name;
     code.value = script.code;
@@ -106,8 +181,8 @@ export async function render(container) {
     runAt.disabled = script.trigger !== 'auto';
     matches.value = script.matches.join('\n');
     form.hidden = false;
-    list.hidden = true;
-    empty.hidden = true;
+    listCard.hidden = true;
+    builtinCard.hidden = true;
     name.focus();
   };
 
@@ -119,12 +194,12 @@ export async function render(container) {
 
   const submit = async (event) => {
     event.preventDefault();
-    code.value = decode(code.value);
+    unpack();
     const patterns = matches.value.split('\n').map((line) => line.trim()).filter(Boolean);
     const invalid = patterns.filter((pattern) => !match.isValid(pattern));
-    if (!code.value.trim()) return setStatus(status, 'Add the script\'s code.', 'error');
-    if (!patterns.length) return setStatus(status, 'Add at least one match pattern.', 'error');
-    if (invalid.length) return setStatus(status, `Invalid match pattern: ${invalid.join(', ')}`, 'error');
+    if (!code.value.trim()) return setStatus(formStatus, 'Add the script\'s code.', 'error');
+    if (!patterns.length) return setStatus(formStatus, 'Add at least one match pattern.', 'error');
+    if (invalid.length) return setStatus(formStatus, `Invalid match pattern: ${invalid.join(', ')}`, 'error');
     const script = {
       ...editing,
       name: name.value.trim() || 'Untitled script',
@@ -134,17 +209,20 @@ export async function render(container) {
       runAt: runAt.value,
       matches: patterns,
     };
-    return attempt(async () => {
+    try {
       await mutate((items) => replace(items, script));
       await close();
-    }, `Saved ${script.name}.`);
+      setStatus(status, `Saved ${script.name}.`, 'success');
+    } catch (error) {
+      setStatus(formStatus, error.message, 'error');
+    }
   };
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: submit },
     h('div', { className: 'row' },
       title,
-      h('button', { type: 'button', onclick: close }, 'Cancel'),
-      h('button', { type: 'submit', className: 'primary' }, 'Save'),
+      h('button', { type: 'button', className: 'small', onclick: close }, icon('x'), 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, icon('check'), 'Save'),
     ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'Code', code),
@@ -154,6 +232,7 @@ export async function render(container) {
       h('label', { className: 'field grow' }, 'Run at (automatic only)', runAt),
     ),
     h('label', { className: 'field' }, 'Match patterns, one per line', matches),
+    formStatus,
   );
 
   const row = (script, error) => {
@@ -170,13 +249,13 @@ export async function render(container) {
       onclick: () => {
         if (remove.dataset.armed) return attempt(() => mutate((items) => items.filter((item) => item.id !== script.id)), `Deleted ${script.name}.`);
         remove.dataset.armed = 'true';
-        remove.textContent = 'Confirm';
+        remove.replaceChildren(icon('trash-2'), 'Confirm');
       },
       onblur: () => {
         delete remove.dataset.armed;
-        remove.textContent = 'Delete';
+        remove.replaceChildren(icon('trash-2'), 'Delete');
       },
-    }, 'Delete');
+    }, icon('trash-2'), 'Delete');
     const duplicate = () => attempt(() => mutate((items) => items.toSpliced(
       items.findIndex((item) => item.id === script.id) + 1,
       0,
@@ -193,8 +272,8 @@ export async function render(container) {
       script.world === 'MAIN' && h('span', { className: 'badge' }, 'Main world'),
       h('span', { className: `badge ${script.trigger === 'auto' ? 'info' : ''}` }, script.trigger === 'auto' ? 'Automatic' : 'Manual'),
       runButton(script, status, lastWebTab),
-      h('button', { type: 'button', className: 'small', onclick: () => open(script, 'Edit script') }, 'Edit'),
-      h('button', { type: 'button', className: 'small', onclick: duplicate }, 'Duplicate'),
+      h('button', { type: 'button', className: 'small', onclick: () => open(script, 'Edit script') }, icon('pencil'), 'Edit'),
+      h('button', { type: 'button', className: 'small', onclick: duplicate }, icon('copy-plus'), 'Duplicate'),
       remove,
     );
   };
@@ -205,16 +284,11 @@ export async function render(container) {
   });
 
   container.append(...[
-    h('section', { className: 'card row' },
-      h('h2', { className: 'grow' }, 'Scripts'),
-      h('label', { className: 'row muted' }, 'Enabled', enabled),
-      h('button', { type: 'button', className: 'primary', onclick: () => open(blank(), 'New script') }, 'New script'),
-    ),
+    await moduleCard('scripts'),
     await availabilityNotice(),
-    status,
+    listCard,
     form,
-    list,
-    empty,
+    builtinCard,
   ].filter(Boolean));
   await refresh();
 }

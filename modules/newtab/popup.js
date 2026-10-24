@@ -1,23 +1,19 @@
 import '../../lib/storage.js';
 import './module.js';
-import { h } from '../../ui/dom.js';
+import { h, icon } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
 const { storage } = globalThis.extenso;
 
 export async function render(container) {
-  const { enabled, url } = await storage.getSettings('newtab');
-  const toggle = h('input', {
-    type: 'checkbox',
-    className: 'toggle',
-    checked: enabled,
-    onchange: () => storage.updateSettings('newtab', { enabled: toggle.checked }),
-  });
+  const { url } = await storage.getSettings('newtab');
   container.append(
+    await moduleCard('newtab'),
     h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Redirect new tabs', toggle),
+      h('h2', {}, 'Redirect URL'),
       url ? h('p', { className: 'mono truncate' }, url) : h('p', { className: 'empty' }, 'No redirect URL set.'),
-      h('button', { type: 'button', onclick: () => openOptions('newtab') }, url ? 'Change URL' : 'Set URL'),
     ),
+    h('button', { type: 'button', onclick: () => openOptions('newtab') }, icon('external-link'), url ? 'Change URL' : 'Set URL'),
   );
 }

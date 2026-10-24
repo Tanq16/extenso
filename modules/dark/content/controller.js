@@ -1,6 +1,6 @@
 (() => {
   const { storage, messages, dark } = globalThis.extenso;
-  const { sites, detector, filter } = dark;
+  const { detector, filter } = dark;
   const isTop = window === window.top;
   const origins = location.ancestorOrigins;
   const topURL = isTop ? location.href : `${origins[origins.length - 1]}/`;
@@ -38,7 +38,7 @@
     else if (changes[stateKey]) onHosts?.(changes[stateKey].newValue?.hosts ?? {});
   };
 
-  const autoTop = async (cached, pendingHint) => {
+  const autoTop = (cached, hint) => {
     let known = cached;
     const decide = (isDark, initial) => {
       setThemed(!isDark);
@@ -47,7 +47,6 @@
       known = isDark;
     };
     if (!cached) setThemed(true);
-    const hint = await pendingHint;
     detector.run((isDark) => {
       decide(isDark, true);
       unwatch = detector.watch(() => detector.run((verdict) => decide(verdict, false), hint), hint);
@@ -73,36 +72,33 @@
 
   const main = async () => {
     if (!host) return;
-    const preload = sites.dynamicFix(frameURL);
-    const knownDark = sites.isDarkSite(topURL);
-    const [settings, state] = await Promise.all([storage.getSettings('dark'), storage.getState('dark')]);
+    const [settings, state, page] = await Promise.all([
+      storage.getSettings('dark'),
+      storage.getState('dark'),
+      messages.send('dark', 'lookup', { top: topURL, frame: frameURL }),
+    ]);
     if (!settings.enabled) return;
     const mode = settings.sites[host] ?? 'auto';
     if (mode === 'off') return;
 
     if (mode === 'filter') {
       chrome.storage.onChanged.addListener(onChanged);
-      filter.start(await sites.inversionFix(frameURL), isTop);
+      filter.start(page.inversion, isTop);
       return;
     }
+    fix = page.fix;
     if (mode === 'dynamic') {
       chrome.storage.onChanged.addListener(onChanged);
-      fix = await preload;
       setThemed(true);
       return;
     }
 
     const expiresAt = state.hosts[host];
     if (isTop && expiresAt > Date.now()) return;
-    const hint = sites.detectorHint(frameURL);
-    const [darkSite] = await Promise.all([
-      expiresAt === undefined && knownDark,
-      preload.then((value) => { fix = value; }),
-    ]);
-    if (darkSite) return;
+    if (expiresAt === undefined && page.darkSite) return;
     chrome.storage.onChanged.addListener(onChanged);
-    if (isTop) await autoTop(expiresAt !== undefined, hint);
-    else autoFrame(state.hosts, await hint);
+    if (isTop) autoTop(expiresAt !== undefined, page.hint);
+    else autoFrame(state.hosts, page.hint);
   };
 
   main().catch((error) => console.error('[extenso] dark failed', error));

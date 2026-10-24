@@ -96,15 +96,7 @@
     }
   };
 
-  const hasSomeStyle = () => document.querySelector(META) != null
-    || Boolean(document.documentElement.style.backgroundColor || document.body?.style.backgroundColor)
-    || [...document.styleSheets].some((sheet) => sheet.ownerNode && !sheet.ownerNode.matches?.(OWN_STYLE));
-
-  const canCheck = () => {
-    const { body } = document;
-    return Boolean(body && body.scrollHeight >= 32 && body.clientHeight >= 32 && body.childElementCount > 0 && hasSomeStyle())
-      && [...body.children].some((child) => !['SCRIPT', 'STYLE', 'LINK'].includes(child.tagName));
-  };
+  const loaded = () => document.readyState === 'complete';
 
   const hintVerdict = (hint) => {
     const target = document.querySelector(hint.target);
@@ -119,25 +111,21 @@
   };
 
   const waitFor = (ready, verdict, callback) => {
-    if (ready(false)) {
+    if (ready()) {
       callback(verdict());
       return;
     }
-    const observer = new MutationObserver(() => {
-      if (ready(false)) finish();
-    });
-    const onReadyState = () => {
-      if (ready(document.readyState === 'complete')) finish();
-    };
-    const finish = () => {
+    const onChange = () => {
+      if (!ready()) return;
       stop();
       callback(verdict());
     };
+    const observer = new MutationObserver(onChange);
     observer.observe(document.documentElement, { childList: true });
-    document.addEventListener('readystatechange', onReadyState);
+    document.addEventListener('readystatechange', onChange);
     cleanup = () => {
       observer.disconnect();
-      document.removeEventListener('readystatechange', onReadyState);
+      document.removeEventListener('readystatechange', onChange);
     };
   };
 
@@ -152,10 +140,10 @@
       return;
     }
     if (hint?.target) {
-      waitFor((complete) => complete || hintVerdict(hint) || document.readyState !== 'loading', () => hintVerdict(hint), callback);
+      waitFor(() => loaded() || hintVerdict(hint), () => hintVerdict(hint), callback);
       return;
     }
-    waitFor((complete) => complete || canCheck(), check, callback);
+    waitFor(loaded, check, callback);
   };
 
   const watch = (callback, hint) => {

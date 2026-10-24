@@ -1,7 +1,8 @@
 import '../../lib/storage.js';
 import '../../lib/messages.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 
 const { storage, messages, modules } = globalThis.extenso;
 const { payloads } = modules.relay;
@@ -23,6 +24,7 @@ const options = (values, labels = {}) => values.map((value) => h('option', { val
 export async function render(container) {
   const settings = await storage.getSettings('relay');
   const status = h('p', { className: 'status' });
+  const formStatus = h('p', { className: 'status' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'No targets yet.');
   const title = h('h2', { className: 'grow' });
@@ -35,7 +37,7 @@ export async function render(container) {
 
   const persist = async (message) => {
     try {
-      await storage.updateSettings('relay', { enabled: settings.enabled, targets: settings.targets });
+      await storage.updateSettings('relay', { targets: settings.targets });
       setStatus(status, message, 'success');
     } catch (error) {
       setStatus(status, error.message, 'error');
@@ -43,14 +45,14 @@ export async function render(container) {
     draw();
   };
 
-  const test = async (target, button) => {
+  const test = async (target, button, output) => {
     button.disabled = true;
-    setStatus(status, `Testing ${target.name || target.url}...`, 'info');
+    setStatus(output, `Testing ${target.name || target.url}...`, 'info');
     try {
       const code = await messages.send('relay', 'test', { target });
-      setStatus(status, `${target.url} answered ${code}.`, 'success');
+      setStatus(output, `${target.url} answered ${code}.`, 'success');
     } catch (error) {
-      setStatus(status, error.message, 'error');
+      setStatus(output, error.message, 'error');
     } finally {
       button.disabled = false;
     }
@@ -69,6 +71,7 @@ export async function render(container) {
     method.value = target?.method ?? 'POST';
     payload.value = target?.payload ?? 'page';
     headers.value = Object.entries(target?.headers ?? {}).map(([key, value]) => `${key}: ${value}`).join('\n');
+    setStatus(formStatus, '');
     form.hidden = false;
     name.focus();
   };
@@ -96,7 +99,7 @@ export async function render(container) {
     try {
       target = read();
     } catch (error) {
-      setStatus(status, error.message, 'error');
+      setStatus(formStatus, error.message, 'error');
       return;
     }
     if (editing) Object.assign(editing, target);
@@ -107,28 +110,34 @@ export async function render(container) {
 
   const testButton = h('button', {
     type: 'button',
+    className: 'small',
     onclick: () => {
       try {
-        test(read(), testButton);
+        test(read(), testButton, formStatus);
       } catch (error) {
-        setStatus(status, error.message, 'error');
+        setStatus(formStatus, error.message, 'error');
       }
     },
-  }, 'Test');
+  }, icon('flask-conical'), 'Test');
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: save },
-    h('div', { className: 'row' }, title, h('button', { type: 'button', className: 'small', onclick: close }, 'Cancel')),
+    h('div', { className: 'row' },
+      title,
+      testButton,
+      h('button', { type: 'button', className: 'small', onclick: close }, icon('x'), 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, icon('check'), 'Save'),
+    ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'URL', url),
     h('label', { className: 'field' }, 'Method', method),
     h('label', { className: 'field' }, 'Sends', payload),
     h('label', { className: 'field' }, 'Headers, one "Name: value" per line', headers),
-    h('div', { className: 'row' }, h('button', { type: 'submit', className: 'primary' }, 'Save'), testButton),
+    formStatus,
   );
 
   const draw = () => {
     list.replaceChildren(...settings.targets.map((target) => {
-      const button = h('button', { type: 'button', className: 'small', onclick: () => test(target, button) }, 'Test');
+      const button = h('button', { type: 'button', className: 'small', onclick: () => test(target, button, status) }, icon('flask-conical'), 'Test');
       return h('li', {},
         toggle(target.enabled, (checked) => {
           target.enabled = checked;
@@ -138,7 +147,7 @@ export async function render(container) {
         h('span', { className: 'muted mono grow truncate' }, `${target.method} ${target.url}`),
         h('span', { className: 'badge' }, payloads[target.payload]),
         button,
-        h('button', { type: 'button', className: 'small', onclick: () => open(target) }, 'Edit'),
+        h('button', { type: 'button', className: 'small', onclick: () => open(target) }, icon('pencil'), 'Edit'),
         h('button', {
           type: 'button',
           className: 'small danger',
@@ -147,7 +156,7 @@ export async function render(container) {
             if (editing === target) close();
             persist(`Deleted ${target.name}.`);
           },
-        }, 'Delete'),
+        }, icon('trash-2'), 'Delete'),
       );
     }));
     list.hidden = !settings.targets.length;
@@ -155,17 +164,17 @@ export async function render(container) {
   };
 
   container.append(
+    await moduleCard('relay'),
     h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Relay to local servers', toggle(settings.enabled, (checked) => {
-        settings.enabled = checked;
-        persist(checked ? 'Relay on.' : 'Relay off.');
-      })),
+      h('div', { className: 'row' },
+        h('h2', { className: 'grow' }, 'Targets'),
+        h('button', { type: 'button', className: 'small primary', onclick: () => open(null) }, icon('plus'), 'Add target'),
+      ),
       list,
       empty,
-      h('button', { type: 'button', className: 'primary', onclick: () => open(null) }, 'Add target'),
+      status,
     ),
     form,
-    status,
   );
   draw();
 }

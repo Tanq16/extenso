@@ -10,3 +10,7 @@ body > * {
   max-width: 880px;
   margin-inline: auto;
 }
+
+@media (max-width: 720px) {
+  body { padding-inline: 12px; }
+}

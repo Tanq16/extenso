@@ -1,6 +1,7 @@
 import '../../lib/messages.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
 const { messages } = globalThis.extenso;
@@ -12,12 +13,14 @@ const preview = (value) => (value.length > 80 ? `${value.slice(0, 80)}…` : val
 export async function render(container) {
   const status = h('p', { className: 'status' });
   const list = h('ul', { className: 'list' });
+  const empty = h('p', { className: 'empty' }, 'Nothing captured yet.');
+  const clear = h('button', { type: 'button', className: 'small danger' }, icon('trash-2'), 'Clear');
 
   const copy = async (button, value) => {
     try {
       await navigator.clipboard.writeText(value);
-      button.textContent = 'Copied';
-      setTimeout(() => (button.textContent = 'Copy'), 1200);
+      button.replaceChildren(icon('check'), 'Copied');
+      setTimeout(() => button.replaceChildren(icon('copy'), 'Copy'), 1200);
     } catch (error) {
       setStatus(status, error.message, 'error');
     }
@@ -26,28 +29,22 @@ export async function render(container) {
   const draw = async () => {
     const rows = await messages.send('siphon', 'list');
     const captured = rows.filter((row) => row.value != null);
-    list.replaceChildren();
-    if (!captured.length) {
-      list.append(h('li', {}, h('span', { className: 'empty grow' }, 'Nothing captured yet.')));
-      return;
-    }
-    for (const row of captured) {
-      list.append(
-        h('li', {},
-          h('div', { className: 'grow stack' },
-            h('div', { className: 'row' },
-              h('strong', {}, row.name),
-              h('span', { className: 'muted' }, when(row.at)),
-            ),
-            h('span', { className: 'mono muted truncate' }, preview(row.value)),
-          ),
-          h('button', { type: 'button', className: 'small', onclick: (event) => copy(event.target, row.value) }, 'Copy'),
+    list.replaceChildren(...captured.map((row) => h('li', {},
+      h('div', { className: 'grow stack' },
+        h('div', { className: 'row' },
+          h('strong', {}, row.name),
+          h('span', { className: 'muted' }, when(row.at)),
         ),
-      );
-    }
+        h('span', { className: 'mono muted truncate' }, preview(row.value)),
+      ),
+      h('button', { type: 'button', className: 'small', onclick: (event) => copy(event.currentTarget, row.value) }, icon('copy'), 'Copy'),
+    )));
+    list.hidden = !captured.length;
+    clear.hidden = !captured.length;
+    empty.hidden = Boolean(captured.length);
   };
 
-  const clearAll = async () => {
+  clear.addEventListener('click', async () => {
     try {
       await messages.send('siphon', 'clear', {});
       await draw();
@@ -55,20 +52,17 @@ export async function render(container) {
     } catch (error) {
       setStatus(status, error.message, 'error');
     }
-  };
+  });
 
   container.append(
+    await moduleCard('siphon'),
     h('section', { className: 'card' },
-      h('div', { className: 'row' },
-        h('h2', {}, 'Captured'),
-        h('div', { className: 'row' },
-          h('button', { type: 'button', className: 'small', onclick: () => openOptions('siphon') }, 'Rules'),
-          h('button', { type: 'button', className: 'small danger', onclick: clearAll }, 'Clear'),
-        ),
-      ),
+      h('div', { className: 'row' }, h('h2', { className: 'grow' }, 'Captured'), clear),
       list,
+      empty,
+      status,
     ),
-    status,
+    h('button', { type: 'button', onclick: () => openOptions('siphon') }, icon('external-link'), 'Manage rules'),
   );
   await draw();
 }

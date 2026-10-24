@@ -2,8 +2,8 @@ import '../../lib/storage.js';
 import './module.js';
 import { scriptId, syncContentScripts } from '../../lib/content-scripts.js';
 import { isolated, main } from './engine-files.js';
+import { lookup } from './sites.js';
 
-const MODES = ['auto', 'dynamic', 'filter', 'off'];
 const DAY = 24 * 60 * 60 * 1000;
 const FETCH_TIMEOUT = 10_000;
 const SHARED = {
@@ -22,7 +22,6 @@ const SCRIPTS = [
       'lib/storage.js',
       'lib/messages.js',
       'modules/dark/module.js',
-      'modules/dark/content/sites.js',
       'modules/dark/content/detector.js',
       'modules/dark/content/filter.js',
       ...isolated,
@@ -30,7 +29,7 @@ const SCRIPTS = [
     ],
   },
 ];
-const { storage } = globalThis.extenso;
+const { storage, modules } = globalThis.extenso;
 
 let queue = Promise.resolve();
 const serialize = (task) => {
@@ -64,7 +63,7 @@ const reloadHost = async (host) => {
 };
 
 const setSite = (host, mode) => serialize(async () => {
-  if (!MODES.includes(mode)) throw new Error(`Unknown mode: ${mode}`);
+  if (!Object.hasOwn(modules.dark.modes, mode)) throw new Error(`Unknown mode: ${mode}`);
   const { sites } = await storage.getSettings('dark');
   const next = { ...sites };
   if (mode === 'auto') delete next[host];
@@ -77,6 +76,11 @@ const updateHosts = (change) => serialize(async () => {
   const [{ ttlDays }, { hosts }] = await Promise.all([storage.getSettings('dark'), storage.getState('dark')]);
   await storage.updateState('dark', { hosts: change({ ...hosts }, Date.now() + ttlDays * DAY) });
 });
+
+const urlOf = (value) => {
+  if (typeof value !== 'string' || !URL.canParse(value)) throw new Error('A URL is required.');
+  return value;
+};
 
 const encode = (bytes) => {
   let binary = '';
@@ -99,6 +103,8 @@ export async function onMessage(message) {
   switch (message.action) {
     case 'fetch':
       return fetchResource(message);
+    case 'lookup':
+      return lookup(urlOf(message.top), urlOf(message.frame));
     case 'remember':
       return updateHosts((hosts, expiresAt) => ({ ...hosts, [hostOf(message.host)]: expiresAt }));
     case 'forget':
