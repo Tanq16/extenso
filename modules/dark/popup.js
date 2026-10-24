@@ -4,23 +4,24 @@ import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
 import { openOptions } from '../../ui/tabs.js';
 
-const MODES = [['auto', 'Auto'], ['dynamic', 'Dynamic'], ['filter', 'Filter'], ['off', 'Off']];
-const { messages, storage } = globalThis.extenso;
+const HINTS = {
+  auto: 'Themes the site unless it is already dark.',
+  dynamic: 'Always rewrites the site\'s colors to dark.',
+  filter: 'Inverts colors but not images, for sites that Always breaks.',
+  off: 'Leaves the site alone.',
+};
+const { messages, storage, modules } = globalThis.extenso;
 
 const pageOf = (tab) => {
   const url = URL.parse(tab?.url ?? '');
   return url && ['http:', 'https:'].includes(url.protocol) ? url : null;
 };
 
-const describe = async (page, mode, expiresAt) => {
-  if (mode === 'dynamic') return 'Always themed with the dynamic engine.';
-  if (mode === 'filter') return 'Always themed by inverting the page.';
-  if (mode === 'off') return 'Never themed.';
+const detection = async (page, expiresAt) => {
   if (expiresAt > Date.now()) return `Detected as dark. Left alone until ${new Date(expiresAt).toLocaleDateString()}.`;
   if (expiresAt !== undefined) return 'Detected as dark before. Checked again on the next visit before theming.';
   const { darkSite } = await messages.send('dark', 'lookup', { top: page.href, frame: page.href });
-  if (darkSite) return 'Known dark site. Left alone.';
-  return 'Themed unless the page turns out to be dark.';
+  return darkSite ? 'Known dark site. Left alone.' : '';
 };
 
 export async function render(container, tab) {
@@ -39,8 +40,10 @@ export async function render(container, tab) {
     },
   });
   const modes = h('div', { className: 'tabs', role: 'listbox', 'aria-label': 'Mode for this site' });
+  const hint = h('p', { className: 'muted' });
   const summary = h('p', { className: 'muted' });
   const forget = h('button', { type: 'button', className: 'small', hidden: true }, 'Check again');
+  const detail = h('div', { className: 'row' }, summary, forget);
   const manage = h('button', { type: 'button', onclick: () => openOptions('dark') }, 'Manage sites');
 
   const refresh = async () => {
@@ -50,7 +53,9 @@ export async function render(container, tab) {
     const mode = settings.sites[page.hostname] ?? 'auto';
     const expiresAt = mode === 'auto' ? state.hosts[page.hostname] : undefined;
     for (const button of modes.children) button.setAttribute('aria-selected', String(button.value === mode));
-    summary.textContent = await describe(page, mode, expiresAt);
+    hint.textContent = HINTS[mode];
+    summary.textContent = mode === 'auto' ? await detection(page, expiresAt) : '';
+    detail.hidden = !summary.textContent;
     forget.hidden = expiresAt === undefined;
   };
 
@@ -64,11 +69,11 @@ export async function render(container, tab) {
     }
   };
 
-  modes.append(...MODES.map(([value, label]) => h('button', {
+  modes.append(...Object.entries(modules.dark.modes).map(([value, label]) => h('button', {
     type: 'button',
     role: 'option',
     value,
-    onclick: () => act('setSite', { mode: value }, `${label} for ${page.hostname}. Reloaded its tabs.`),
+    onclick: () => act('setSite', { mode: value }, `${page.hostname} set to ${label}. Reloaded its tabs.`),
   }, label)));
   forget.addEventListener('click', async () => {
     await act('forget', {}, `${page.hostname} is checked again on the next load.`);
@@ -85,7 +90,8 @@ export async function render(container, tab) {
       ? h('section', { className: 'card' },
         h('h2', { className: 'truncate' }, page.hostname),
         modes,
-        h('div', { className: 'row' }, summary, forget))
+        hint,
+        detail)
       : h('p', { className: 'empty' }, 'Open a web page to set its dark mode.'),
     status,
     manage,

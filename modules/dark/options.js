@@ -4,8 +4,7 @@ import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
 
 const DAY = 24 * 60 * 60 * 1000;
-const LABELS = { dynamic: 'Dynamic', filter: 'Filter', off: 'Off' };
-const { messages, storage } = globalThis.extenso;
+const { messages, storage, modules } = globalThis.extenso;
 
 const expiry = (expiresAt) => {
   const days = Math.ceil((expiresAt - Date.now()) / DAY);
@@ -52,8 +51,8 @@ export async function render(container) {
 
     fill(overrides, noOverrides, Object.entries(settings.sites).sort(([a], [b]) => a.localeCompare(b)).map(([host, mode]) => h('li', {},
       h('span', { className: 'grow mono truncate' }, host),
-      h('span', { className: 'badge' }, LABELS[mode] ?? mode),
-      remove(`Remove override for ${host}`, () => messages.send('dark', 'setSite', { host, mode: 'auto' }), `${host} is back to auto.`),
+      h('span', { className: 'badge' }, modules.dark.modes[mode] ?? mode),
+      remove(`Remove override for ${host}`, () => messages.send('dark', 'setSite', { host, mode: 'auto' }), `${host} is back to ${modules.dark.modes.auto}.`),
     )));
 
     const hosts = Object.entries(state.hosts).sort(([a], [b]) => a.localeCompare(b));

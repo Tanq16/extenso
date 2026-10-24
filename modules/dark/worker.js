@@ -4,7 +4,6 @@ import { scriptId, syncContentScripts } from '../../lib/content-scripts.js';
 import { isolated, main } from './engine-files.js';
 import { lookup } from './sites.js';
 
-const MODES = ['auto', 'dynamic', 'filter', 'off'];
 const DAY = 24 * 60 * 60 * 1000;
 const FETCH_TIMEOUT = 10_000;
 const SHARED = {
@@ -30,7 +29,7 @@ const SCRIPTS = [
     ],
   },
 ];
-const { storage } = globalThis.extenso;
+const { storage, modules } = globalThis.extenso;
 
 let queue = Promise.resolve();
 const serialize = (task) => {
@@ -64,7 +63,7 @@ const reloadHost = async (host) => {
 };
 
 const setSite = (host, mode) => serialize(async () => {
-  if (!MODES.includes(mode)) throw new Error(`Unknown mode: ${mode}`);
+  if (!Object.hasOwn(modules.dark.modes, mode)) throw new Error(`Unknown mode: ${mode}`);
   const { sites } = await storage.getSettings('dark');
   const next = { ...sites };
   if (mode === 'auto') delete next[host];
