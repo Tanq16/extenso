@@ -4,6 +4,14 @@
   ${scope} > #center_col { grid-column: 2 !important; max-width: none !important; }
   ${scope} :is(#rso, [data-extenso-page]) { columns: 620px; column-gap: 64px; }
   ${scope} :is(#rso, [data-extenso-page]) :is(.MjjYud, .ULSxyf, .SLPe5b) { break-inside: avoid; }`;
+  const redditFeed = ':is(#main-content shreddit-feed, #main-content shreddit-feed > faceplate-batch)';
+  const redditColumns = (scope) => `  ${scope} #subgrid-container:has(> .main-container > #main-content shreddit-feed) { width: 100% !important; }
+  ${scope} .main-container:has(> #main-content shreddit-feed) { grid-template-columns: minmax(0, 1fr) auto !important; }
+  ${scope} ${redditFeed} { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); grid-auto-rows: 1px; grid-auto-flow: dense; column-gap: 32px; align-items: start; }
+  ${scope} #main-content shreddit-feed > :is(faceplate-batch, [slot="load-after"]) { grid-column: 1 / -1; }
+  ${scope} ${redditFeed} > :is(hr, .virtualized-placeholder[style*="height: 0px"]) { display: none; }
+  ${scope} ${redditFeed} > :not(article, shreddit-ad-post, .virtualized-placeholder, faceplate-batch, hr, [slot]) { position: absolute; }
+  ${scope} ${redditFeed} > :is(article, shreddit-ad-post) { border-bottom: 1px solid var(--color-neutral-border-weak); }`;
   const builtins = [
     {
       id: 'amazon-sponsored',
@@ -166,6 +174,22 @@ ${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
         '[data-part="advertise"]',
       ],
       remove: [],
+    },
+    {
+      id: 'reddit-columns',
+      site: 'Reddit',
+      name: 'Feed in columns on wide screens',
+      enabled: false,
+      matches: ['https://www.reddit.com/*'],
+      hide: [],
+      remove: [],
+      masonry: [`${redditFeed} > :is(article, shreddit-ad-post, .virtualized-placeholder, faceplate-batch)`],
+      css: `@media (min-width: 1600px) {
+${redditColumns('.grid-container.flex-nav-collapsed')}
+}
+@media (min-width: 1880px) {
+${redditColumns('.grid-container')}
+}`,
     },
     {
       id: 'old-reddit-promos',
