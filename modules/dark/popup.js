@@ -1,12 +1,11 @@
 import '../../lib/messages.js';
 import '../../lib/storage.js';
 import './module.js';
-import './content/sites.js';
 import { h, setStatus } from '../../ui/dom.js';
 import { openOptions } from '../../ui/tabs.js';
 
 const MODES = [['auto', 'Auto'], ['dynamic', 'Dynamic'], ['filter', 'Filter'], ['off', 'Off']];
-const { messages, storage, dark } = globalThis.extenso;
+const { messages, storage } = globalThis.extenso;
 
 const pageOf = (tab) => {
   const url = URL.parse(tab?.url ?? '');
@@ -19,7 +18,8 @@ const describe = async (page, mode, expiresAt) => {
   if (mode === 'off') return 'Never themed.';
   if (expiresAt > Date.now()) return `Detected as dark. Left alone until ${new Date(expiresAt).toLocaleDateString()}.`;
   if (expiresAt !== undefined) return 'Detected as dark before. Checked again on the next visit before theming.';
-  if (await dark.sites.isDarkSite(page.href)) return 'Known dark site. Left alone.';
+  const { darkSite } = await messages.send('dark', 'lookup', { top: page.href, frame: page.href });
+  if (darkSite) return 'Known dark site. Left alone.';
   return 'Themed unless the page turns out to be dark.';
 };
 

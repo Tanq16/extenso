@@ -2,6 +2,7 @@ import '../../lib/storage.js';
 import './module.js';
 import { scriptId, syncContentScripts } from '../../lib/content-scripts.js';
 import { isolated, main } from './engine-files.js';
+import { lookup } from './sites.js';
 
 const MODES = ['auto', 'dynamic', 'filter', 'off'];
 const DAY = 24 * 60 * 60 * 1000;
@@ -22,7 +23,6 @@ const SCRIPTS = [
       'lib/storage.js',
       'lib/messages.js',
       'modules/dark/module.js',
-      'modules/dark/content/sites.js',
       'modules/dark/content/detector.js',
       'modules/dark/content/filter.js',
       ...isolated,
@@ -78,6 +78,11 @@ const updateHosts = (change) => serialize(async () => {
   await storage.updateState('dark', { hosts: change({ ...hosts }, Date.now() + ttlDays * DAY) });
 });
 
+const urlOf = (value) => {
+  if (typeof value !== 'string' || !URL.canParse(value)) throw new Error('A URL is required.');
+  return value;
+};
+
 const encode = (bytes) => {
   let binary = '';
   for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
@@ -99,6 +104,8 @@ export async function onMessage(message) {
   switch (message.action) {
     case 'fetch':
       return fetchResource(message);
+    case 'lookup':
+      return lookup(urlOf(message.top), urlOf(message.frame));
     case 'remember':
       return updateHosts((hosts, expiresAt) => ({ ...hosts, [hostOf(message.host)]: expiresAt }));
     case 'forget':
