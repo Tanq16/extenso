@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="icons/icon128.png" alt="Extenso Logo" width="128">
+  <img src=".github/assets/logo.svg" alt="Extenso Logo" width="200">
   <h1>Extenso</h1>
 
   <a href="https://github.com/Tanq16/extenso/actions/workflows/release.yaml"><img alt="Build Workflow" src="https://github.com/Tanq16/extenso/actions/workflows/release.yaml/badge.svg"></a><br><br>
