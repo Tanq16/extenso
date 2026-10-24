@@ -73,9 +73,9 @@ export async function render(container, tab) {
         )))
         : h('p', { className: 'empty' }, 'No rules match this page.'),
       count,
-      h('button', { type: 'button', onclick: () => openOptions('declutter') }, 'Manage rules'),
+      status,
     ),
-    status,
+    h('button', { type: 'button', onclick: () => openOptions('declutter') }, 'Manage rules'),
   );
   await refresh();
 }

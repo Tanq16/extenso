@@ -50,8 +50,18 @@ const replace = (items, script) => items.some((item) => item.id === script.id)
 
 export async function render(container) {
   const status = h('p', { className: 'status' });
+  const formStatus = h('p', { className: 'status' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'No scripts yet.');
+  const listCard = h('section', { className: 'card' },
+    h('div', { className: 'row' },
+      h('h2', { className: 'grow' }, 'Your scripts'),
+      h('button', { type: 'button', className: 'small primary', onclick: () => open(blank(), 'New script') }, 'New script'),
+    ),
+    list,
+    empty,
+    status,
+  );
   let editing = null;
 
   const attempt = async (action, success) => {
@@ -81,13 +91,15 @@ export async function render(container) {
   const refresh = async () => {
     const [settings, { errors }] = await Promise.all([storage.getSettings('scripts'), storage.getState('scripts')]);
     list.replaceChildren(...settings.items.map((script) => row(script, errors[script.id])));
-    list.hidden = Boolean(editing) || !settings.items.length;
-    empty.hidden = Boolean(editing) || settings.items.length > 0;
+    listCard.hidden = Boolean(editing);
+    list.hidden = !settings.items.length;
+    empty.hidden = settings.items.length > 0;
   };
 
   const open = (script, heading) => {
     editing = script;
     setStatus(status, '');
+    setStatus(formStatus, '');
     title.textContent = heading;
     name.value = script.name;
     code.value = script.code;
@@ -97,8 +109,7 @@ export async function render(container) {
     runAt.disabled = script.trigger !== 'auto';
     matches.value = script.matches.join('\n');
     form.hidden = false;
-    list.hidden = true;
-    empty.hidden = true;
+    listCard.hidden = true;
     name.focus();
   };
 
@@ -113,9 +124,9 @@ export async function render(container) {
     code.value = decode(code.value);
     const patterns = matches.value.split('\n').map((line) => line.trim()).filter(Boolean);
     const invalid = patterns.filter((pattern) => !match.isValid(pattern));
-    if (!code.value.trim()) return setStatus(status, 'Add the script\'s code.', 'error');
-    if (!patterns.length) return setStatus(status, 'Add at least one match pattern.', 'error');
-    if (invalid.length) return setStatus(status, `Invalid match pattern: ${invalid.join(', ')}`, 'error');
+    if (!code.value.trim()) return setStatus(formStatus, 'Add the script\'s code.', 'error');
+    if (!patterns.length) return setStatus(formStatus, 'Add at least one match pattern.', 'error');
+    if (invalid.length) return setStatus(formStatus, `Invalid match pattern: ${invalid.join(', ')}`, 'error');
     const script = {
       ...editing,
       name: name.value.trim() || 'Untitled script',
@@ -125,17 +136,20 @@ export async function render(container) {
       runAt: runAt.value,
       matches: patterns,
     };
-    return attempt(async () => {
+    try {
       await mutate((items) => replace(items, script));
       await close();
-    }, `Saved ${script.name}.`);
+      setStatus(status, `Saved ${script.name}.`, 'success');
+    } catch (error) {
+      setStatus(formStatus, error.message, 'error');
+    }
   };
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: submit },
     h('div', { className: 'row' },
       title,
-      h('button', { type: 'button', onclick: close }, 'Cancel'),
-      h('button', { type: 'submit', className: 'primary' }, 'Save'),
+      h('button', { type: 'button', className: 'small', onclick: close }, 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, 'Save'),
     ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'Code', code),
@@ -145,6 +159,7 @@ export async function render(container) {
       h('label', { className: 'field grow' }, 'Run at (automatic only)', runAt),
     ),
     h('label', { className: 'field' }, 'Match patterns, one per line', matches),
+    formStatus,
   );
 
   const row = (script, error) => {
@@ -197,15 +212,9 @@ export async function render(container) {
 
   container.append(...[
     await moduleCard('scripts'),
-    h('section', { className: 'card row' },
-      h('h2', { className: 'grow' }, 'Scripts'),
-      h('button', { type: 'button', className: 'primary', onclick: () => open(blank(), 'New script') }, 'New script'),
-    ),
     await availabilityNotice(),
-    status,
+    listCard,
     form,
-    list,
-    empty,
   ].filter(Boolean));
   await refresh();
 }

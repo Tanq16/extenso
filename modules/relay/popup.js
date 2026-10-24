@@ -29,6 +29,7 @@ export async function render(container, tab) {
   container.append(
     await moduleCard('relay'),
     h('section', { className: 'card' },
+      h('h2', {}, 'Targets'),
       targets.length
         ? h('ul', { className: 'list' }, targets.map((target) => {
           const button = h('button', { type: 'button', className: 'small primary', onclick: () => send(target, button) }, 'Send');
@@ -39,8 +40,8 @@ export async function render(container, tab) {
           );
         }))
         : h('p', { className: 'empty' }, 'No targets enabled.'),
-      h('button', { type: 'button', onclick: () => openOptions('relay') }, 'Manage targets'),
+      status,
     ),
-    status,
+    h('button', { type: 'button', onclick: () => openOptions('relay') }, 'Manage targets'),
   );
 }

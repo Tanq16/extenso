@@ -14,6 +14,7 @@ export async function render(container) {
   const status = h('p', { className: 'status' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'Nothing captured yet.');
+  const clear = h('button', { type: 'button', className: 'small danger' }, 'Clear');
 
   const copy = async (button, value) => {
     try {
@@ -39,10 +40,11 @@ export async function render(container) {
       h('button', { type: 'button', className: 'small', onclick: (event) => copy(event.target, row.value) }, 'Copy'),
     )));
     list.hidden = !captured.length;
+    clear.hidden = !captured.length;
     empty.hidden = Boolean(captured.length);
   };
 
-  const clearAll = async () => {
+  clear.addEventListener('click', async () => {
     try {
       await messages.send('siphon', 'clear', {});
       await draw();
@@ -50,22 +52,17 @@ export async function render(container) {
     } catch (error) {
       setStatus(status, error.message, 'error');
     }
-  };
+  });
 
   container.append(
     await moduleCard('siphon'),
     h('section', { className: 'card' },
-      h('div', { className: 'row' },
-        h('h2', {}, 'Captured'),
-        h('div', { className: 'row' },
-          h('button', { type: 'button', className: 'small', onclick: () => openOptions('siphon') }, 'Rules'),
-          h('button', { type: 'button', className: 'small danger', onclick: clearAll }, 'Clear'),
-        ),
-      ),
+      h('div', { className: 'row' }, h('h2', { className: 'grow' }, 'Captured'), clear),
       list,
       empty,
+      status,
     ),
-    status,
+    h('button', { type: 'button', onclick: () => openOptions('siphon') }, 'Manage rules'),
   );
   await draw();
 }

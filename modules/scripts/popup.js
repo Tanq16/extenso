@@ -21,8 +21,7 @@ export async function render(container, tab) {
   container.append(...[
     await moduleCard('scripts'),
     await availabilityNotice(),
-    list,
-    status,
+    h('section', { className: 'card' }, h('h2', {}, 'Run on this page'), list, status),
     h('button', { type: 'button', onclick: () => openOptions('scripts') }, 'Manage scripts'),
   ].filter(Boolean));
 }

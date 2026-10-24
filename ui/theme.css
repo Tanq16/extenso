@@ -92,6 +92,7 @@ input:not([type="checkbox"], [type="radio"], [type="file"]):focus, textarea:focu
   outline: none;
   background-color: var(--surface1);
 }
+input.narrow { width: 96px; flex-shrink: 0; }
 ::placeholder { color: var(--overlay0); }
 textarea { min-height: 96px; resize: vertical; }
 textarea.code { font-family: var(--mono); font-size: 13px; line-height: 1.6; tab-size: 2; }

@@ -14,16 +14,17 @@ const expiry = (expiresAt) => {
 };
 
 export async function render(container) {
-  const status = h('p', { className: 'status' });
   const general = h('p', { className: 'status' });
-  const ttl = h('input', { type: 'number', min: 1, step: 1 });
+  const overridesStatus = h('p', { className: 'status' });
+  const cacheStatus = h('p', { className: 'status' });
+  const ttl = h('input', { type: 'number', className: 'narrow', min: 1, step: 1 });
   const overrides = h('ul', { className: 'list' });
   const noOverrides = h('p', { className: 'empty' }, 'No site overrides. Set one from the popup.');
   const cache = h('ul', { className: 'list' });
   const noCache = h('p', { className: 'empty' }, 'No sites detected as dark yet.');
-  const clear = h('button', { type: 'button', className: 'danger' }, 'Clear all');
+  const clear = h('button', { type: 'button', className: 'small danger' }, 'Clear all');
 
-  const run = async (task, message, target = status) => {
+  const run = async (task, message, target) => {
     try {
       await task();
       setStatus(target, message, 'success');
@@ -32,11 +33,11 @@ export async function render(container) {
     }
   };
 
-  const remove = (label, task, message) => h('button', {
+  const remove = (label, task, message, target) => h('button', {
     type: 'button',
     className: 'small danger',
     'aria-label': label,
-    onclick: () => run(task, message),
+    onclick: () => run(task, message, target),
   }, 'Remove');
 
   const fill = (list, empty, items) => {
@@ -52,7 +53,7 @@ export async function render(container) {
     fill(overrides, noOverrides, Object.entries(settings.sites).sort(([a], [b]) => a.localeCompare(b)).map(([host, mode]) => h('li', {},
       h('span', { className: 'grow mono truncate' }, host),
       h('span', { className: 'badge' }, modules.dark.modes[mode] ?? mode),
-      remove(`Remove override for ${host}`, () => messages.send('dark', 'setSite', { host, mode: 'auto' }), `${host} is back to ${modules.dark.modes.auto}.`),
+      remove(`Remove override for ${host}`, () => messages.send('dark', 'setSite', { host, mode: 'auto' }), `${host} is back to ${modules.dark.modes.auto}.`, overridesStatus),
     )));
 
     const hosts = Object.entries(state.hosts).sort(([a], [b]) => a.localeCompare(b));
@@ -62,7 +63,7 @@ export async function render(container) {
       return h('li', {},
         h('span', { className: 'grow mono truncate' }, host),
         h('span', { className: `badge ${type}` }, text),
-        remove(`Forget ${host}`, () => messages.send('dark', 'forget', { host }), `${host} is checked again on the next visit.`),
+        remove(`Forget ${host}`, () => messages.send('dark', 'forget', { host }), `${host} is checked again on the next visit.`, cacheStatus),
       );
     }));
   };
@@ -75,27 +76,27 @@ export async function render(container) {
     }
     run(() => storage.updateSettings('dark', { ttlDays: days }), `Dark sites are checked again after ${days} days.`, general);
   });
-  clear.addEventListener('click', () => run(() => messages.send('dark', 'clearCache'), 'Cleared the dark site cache.'));
+  clear.addEventListener('click', () => run(() => messages.send('dark', 'clearCache'), 'Cleared the dark site cache.', cacheStatus));
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && (changes[storage.settingsKey('dark')] || changes[storage.stateKey('dark')])) refresh();
   });
 
   container.append(
-    await moduleCard('dark', general, h('label', { className: 'field' }, 'Days before a dark site is checked again', ttl)),
+    await moduleCard('dark', general, h('label', { className: 'row' }, 'Days before a dark site is checked again', ttl)),
     h('section', { className: 'card' },
       h('h2', {}, 'Site overrides'),
       overrides,
       noOverrides,
+      overridesStatus,
     ),
     h('section', { className: 'card' },
-      h('h2', {}, 'Detected dark sites'),
+      h('div', { className: 'row' }, h('h2', { className: 'grow' }, 'Detected dark sites'), clear),
       h('p', { className: 'muted' }, 'These sites are left unthemed until their entry expires, then checked again before theming.'),
       cache,
       noCache,
-      clear,
+      cacheStatus,
     ),
-    status,
   );
   await refresh();
 }

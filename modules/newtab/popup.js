@@ -11,8 +11,9 @@ export async function render(container) {
   container.append(
     await moduleCard('newtab'),
     h('section', { className: 'card' },
+      h('h2', {}, 'Redirect URL'),
       url ? h('p', { className: 'mono truncate' }, url) : h('p', { className: 'empty' }, 'No redirect URL set.'),
-      h('button', { type: 'button', onclick: () => openOptions('newtab') }, url ? 'Change URL' : 'Set URL'),
     ),
+    h('button', { type: 'button', onclick: () => openOptions('newtab') }, url ? 'Change URL' : 'Set URL'),
   );
 }

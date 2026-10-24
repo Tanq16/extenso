@@ -79,9 +79,9 @@ export async function render(container, tab) {
         h('h2', { className: 'truncate' }, page.hostname),
         modes,
         hint,
-        detail)
+        detail,
+        status)
       : h('p', { className: 'empty' }, 'Open a web page to set its dark mode.'),
-    status,
     manage,
   );
   await refresh();

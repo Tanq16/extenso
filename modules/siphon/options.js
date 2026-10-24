@@ -93,7 +93,11 @@ function editor(rule, { onSave, onCancel }) {
   };
 
   return h('form', { className: 'card', onsubmit: save },
-    h('h3', {}, rule.id ? 'Edit rule' : 'New rule'),
+    h('div', { className: 'row' },
+      h('h2', { className: 'grow' }, rule.id ? 'Edit rule' : 'New rule'),
+      h('button', { type: 'button', className: 'small', onclick: onCancel }, 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, 'Save'),
+    ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'Scope match pattern', pattern),
     h('label', { className: 'field' }, 'URL regex', urlRegex),
@@ -106,25 +110,31 @@ function editor(rule, { onSave, onCancel }) {
     keepNField,
     h('label', { className: 'row' }, 'Notify on capture', notify),
     h('label', { className: 'row' }, 'Copy to clipboard on capture', copy),
-    h('div', { className: 'row' },
-      h('button', { type: 'submit', className: 'primary' }, 'Save rule'),
-      h('button', { type: 'button', onclick: onCancel }, 'Cancel'),
-    ),
     status,
   );
 }
 
 export async function render(container) {
   const status = h('p', { className: 'status' });
-  const listCard = h('section', { className: 'card' });
-  const slot = h('div', {});
+  const list = h('ul', { className: 'list' });
+  const empty = h('p', { className: 'empty' }, 'No rules yet.');
+  const slot = h('div', { className: 'stack' });
 
   const settings = await storage.getSettings('siphon');
   let rules = settings.rules;
 
-  const persist = async (next) => {
-    rules = next;
-    await storage.updateSettings('siphon', { rules });
+  const persist = async (next, message) => {
+    try {
+      await storage.updateSettings('siphon', { rules: next });
+      rules = next;
+      if (message) setStatus(status, message, 'success');
+      return true;
+    } catch (error) {
+      setStatus(status, error.message, 'error');
+      return false;
+    } finally {
+      draw();
+    }
   };
 
   const openEditor = (rule) => {
@@ -132,30 +142,17 @@ export async function render(container) {
       editor(rule, {
         onCancel: () => slot.replaceChildren(),
         onSave: async (saved) => {
-          try {
-            if (saved.id) await persist(rules.map((item) => (item.id === saved.id ? saved : item)));
-            else await persist([...rules, { ...saved, id: crypto.randomUUID(), enabled: true }]);
-            slot.replaceChildren();
-            draw();
-            setStatus(status, 'Saved.', 'success');
-          } catch (error) {
-            setStatus(status, error.message, 'error');
-          }
+          const next = saved.id
+            ? rules.map((item) => (item.id === saved.id ? saved : item))
+            : [...rules, { ...saved, id: crypto.randomUUID(), enabled: true }];
+          if (await persist(next, `Saved ${saved.name}.`)) slot.replaceChildren();
         },
       }),
     );
   };
 
   const draw = () => {
-    const toggle = h('div', { className: 'row' },
-      h('h2', {}, 'Rules'),
-      h('button', { type: 'button', className: 'primary small', onclick: () => openEditor(blank()) }, 'Add rule'),
-    );
-    if (!rules.length) {
-      listCard.replaceChildren(toggle, h('p', { className: 'empty' }, 'No rules yet.'));
-      return;
-    }
-    const items = rules.map((rule) => {
+    list.replaceChildren(...rules.map((rule) => {
       const enable = h('input', {
         type: 'checkbox',
         className: 'toggle',
@@ -172,16 +169,26 @@ export async function render(container) {
         h('button', {
           type: 'button',
           className: 'small danger',
-          onclick: async () => {
-            await persist(rules.filter((item) => item.id !== rule.id));
-            draw();
-          },
+          onclick: () => persist(rules.filter((item) => item.id !== rule.id), `Deleted ${rule.name}.`),
         }, 'Delete'),
       );
-    });
-    listCard.replaceChildren(toggle, h('ul', { className: 'list' }, ...items));
+    }));
+    list.hidden = !rules.length;
+    empty.hidden = Boolean(rules.length);
   };
 
-  container.append(await moduleCard('siphon'), listCard, slot, status);
+  container.append(
+    await moduleCard('siphon'),
+    h('section', { className: 'card' },
+      h('div', { className: 'row' },
+        h('h2', { className: 'grow' }, 'Rules'),
+        h('button', { type: 'button', className: 'small primary', onclick: () => openEditor(blank()) }, 'Add rule'),
+      ),
+      list,
+      empty,
+      status,
+    ),
+    slot,
+  );
   draw();
 }
