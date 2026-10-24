@@ -2,8 +2,8 @@
   const google = ['https://www.google.com/search*', 'https://www.google.ca/search*'];
   const googleColumns = (scope) => `  ${scope} { grid-template-columns: minmax(0, 260px) minmax(0, 1fr) auto !important; padding-right: 44px; }
   ${scope} > #center_col { grid-column: 2 !important; max-width: none !important; }
-  ${scope} #rso { columns: 620px; column-gap: 64px; }
-  ${scope} #rso :is(.MjjYud, .ULSxyf, .SLPe5b) { break-inside: avoid; }`;
+  ${scope} :is(#rso, [data-extenso-page]) { columns: 620px; column-gap: 64px; }
+  ${scope} :is(#rso, [data-extenso-page]) :is(.MjjYud, .ULSxyf, .SLPe5b) { break-inside: avoid; }`;
   const builtins = [
     {
       id: 'amazon-sponsored',

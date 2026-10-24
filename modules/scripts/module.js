@@ -69,6 +69,17 @@
       runAt: 'document_start',
       matches: ['*://*.reddit.com/*'],
     },
+    {
+      id: 'google-continuous-scroll',
+      site: 'Google Search',
+      name: 'Continuous scroll',
+      description: 'Loads the next page of results as you near the bottom, instead of showing page numbers.',
+      enabled: false,
+      trigger: 'auto',
+      world: 'USER_SCRIPT',
+      runAt: 'document_idle',
+      matches: ['https://www.google.com/search*', 'https://www.google.ca/search*'],
+    },
   ];
 
   const builtinsOf = (settings) => builtins.map((script) => ({

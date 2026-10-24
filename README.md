@@ -15,7 +15,7 @@ Siphon reads cookies, headers, request and response bodies, and page storage on 
 ## Features
 
 - **New tab** opens a URL of your choice in place of Chrome's new tab page.
-- **Scripts** stores bookmarklets and user scripts, runs manual ones from the popup or the right-click menu, and runs automatic ones on matching pages, with 14 built-in scripts for any page, YouTube, and Reddit.
+- **Scripts** stores bookmarklets and user scripts, runs manual ones from the popup or the right-click menu, and runs automatic ones on matching pages, with 15 built-in scripts for any page, YouTube, Reddit, and Google Search.
 - **Siphon** captures a value from a query parameter, header, body, cookie, or web storage whenever a matching request or page appears.
 - **Siphon's DevTools panel** turns any field of a recorded request, cookie, or storage entry into a prefilled rule.
 - **Dark mode** themes light pages and leaves dark ones alone, with a per-site choice of Auto, Always, Invert, or Never.
@@ -90,7 +90,7 @@ Set the redirect URL on the options page. A URL without a scheme gets `https://`
 | Run at | Document idle, end, or start, for automatic scripts only |
 | Match patterns | Where an automatic script runs, or where a manual one is offered |
 
-- **Built-in scripts** are grouped by site on the options page. The manual ones for any page start on, and the automatic ones for YouTube and Reddit start off. Customize copies one into your scripts for editing.
+- **Built-in scripts** are grouped by site on the options page. The manual ones for any page start on, and the automatic ones for YouTube, Reddit, and Google Search start off. Customize copies one into your scripts for editing.
 - **Manual scripts** appear with a Run button in the popup on matching pages, and under Run script in the right-click menu. A failure from the menu shows a notification.
 - **Automatic scripts** are registered with Chrome and run on every matching page load, each in its own function scope so top-level names never clash. One that Chrome rejects shows a Not registered badge on the options page.
 - **Run on the options page** runs the script on the most recently used web tab.
