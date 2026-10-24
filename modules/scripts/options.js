@@ -1,7 +1,7 @@
 import '../../lib/match.js';
 import '../../lib/storage.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 import { availabilityNotice, runButton } from './ui.js';
 
@@ -56,7 +56,7 @@ export async function render(container) {
   const listCard = h('section', { className: 'card' },
     h('div', { className: 'row' },
       h('h2', { className: 'grow' }, 'Your scripts'),
-      h('button', { type: 'button', className: 'small primary', onclick: () => open(blank(), 'New script') }, 'New script'),
+      h('button', { type: 'button', className: 'small primary', onclick: () => open(blank(), 'New script') }, icon('plus'), 'New script'),
     ),
     list,
     empty,
@@ -148,8 +148,8 @@ export async function render(container) {
   const form = h('form', { className: 'card', hidden: true, onsubmit: submit },
     h('div', { className: 'row' },
       title,
-      h('button', { type: 'button', className: 'small', onclick: close }, 'Cancel'),
-      h('button', { type: 'submit', className: 'small primary' }, 'Save'),
+      h('button', { type: 'button', className: 'small', onclick: close }, icon('x'), 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, icon('check'), 'Save'),
     ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'Code', code),
@@ -176,13 +176,13 @@ export async function render(container) {
       onclick: () => {
         if (remove.dataset.armed) return attempt(() => mutate((items) => items.filter((item) => item.id !== script.id)), `Deleted ${script.name}.`);
         remove.dataset.armed = 'true';
-        remove.textContent = 'Confirm';
+        remove.replaceChildren(icon('trash-2'), 'Confirm');
       },
       onblur: () => {
         delete remove.dataset.armed;
-        remove.textContent = 'Delete';
+        remove.replaceChildren(icon('trash-2'), 'Delete');
       },
-    }, 'Delete');
+    }, icon('trash-2'), 'Delete');
     const duplicate = () => attempt(() => mutate((items) => items.toSpliced(
       items.findIndex((item) => item.id === script.id) + 1,
       0,
@@ -199,8 +199,8 @@ export async function render(container) {
       script.world === 'MAIN' && h('span', { className: 'badge' }, 'Main world'),
       h('span', { className: `badge ${script.trigger === 'auto' ? 'info' : ''}` }, script.trigger === 'auto' ? 'Automatic' : 'Manual'),
       runButton(script, status, lastWebTab),
-      h('button', { type: 'button', className: 'small', onclick: () => open(script, 'Edit script') }, 'Edit'),
-      h('button', { type: 'button', className: 'small', onclick: duplicate }, 'Duplicate'),
+      h('button', { type: 'button', className: 'small', onclick: () => open(script, 'Edit script') }, icon('pencil'), 'Edit'),
+      h('button', { type: 'button', className: 'small', onclick: duplicate }, icon('copy-plus'), 'Duplicate'),
       remove,
     );
   };

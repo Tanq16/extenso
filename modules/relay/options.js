@@ -1,7 +1,7 @@
 import '../../lib/storage.js';
 import '../../lib/messages.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 
 const { storage, messages, modules } = globalThis.extenso;
@@ -118,14 +118,14 @@ export async function render(container) {
         setStatus(formStatus, error.message, 'error');
       }
     },
-  }, 'Test');
+  }, icon('flask-conical'), 'Test');
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: save },
     h('div', { className: 'row' },
       title,
       testButton,
-      h('button', { type: 'button', className: 'small', onclick: close }, 'Cancel'),
-      h('button', { type: 'submit', className: 'small primary' }, 'Save'),
+      h('button', { type: 'button', className: 'small', onclick: close }, icon('x'), 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, icon('check'), 'Save'),
     ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'URL', url),
@@ -137,7 +137,7 @@ export async function render(container) {
 
   const draw = () => {
     list.replaceChildren(...settings.targets.map((target) => {
-      const button = h('button', { type: 'button', className: 'small', onclick: () => test(target, button, status) }, 'Test');
+      const button = h('button', { type: 'button', className: 'small', onclick: () => test(target, button, status) }, icon('flask-conical'), 'Test');
       return h('li', {},
         toggle(target.enabled, (checked) => {
           target.enabled = checked;
@@ -147,7 +147,7 @@ export async function render(container) {
         h('span', { className: 'muted mono grow truncate' }, `${target.method} ${target.url}`),
         h('span', { className: 'badge' }, payloads[target.payload]),
         button,
-        h('button', { type: 'button', className: 'small', onclick: () => open(target) }, 'Edit'),
+        h('button', { type: 'button', className: 'small', onclick: () => open(target) }, icon('pencil'), 'Edit'),
         h('button', {
           type: 'button',
           className: 'small danger',
@@ -156,7 +156,7 @@ export async function render(container) {
             if (editing === target) close();
             persist(`Deleted ${target.name}.`);
           },
-        }, 'Delete'),
+        }, icon('trash-2'), 'Delete'),
       );
     }));
     list.hidden = !settings.targets.length;
@@ -168,7 +168,7 @@ export async function render(container) {
     h('section', { className: 'card' },
       h('div', { className: 'row' },
         h('h2', { className: 'grow' }, 'Targets'),
-        h('button', { type: 'button', className: 'small primary', onclick: () => open(null) }, 'Add target'),
+        h('button', { type: 'button', className: 'small primary', onclick: () => open(null) }, icon('plus'), 'Add target'),
       ),
       list,
       empty,

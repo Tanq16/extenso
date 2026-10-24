@@ -2,7 +2,7 @@ import '../../lib/storage.js';
 import '../../lib/match.js';
 import '../../lib/messages.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
@@ -75,7 +75,7 @@ export async function render(container, tab) {
       count,
       status,
     ),
-    h('button', { type: 'button', onclick: () => openOptions('declutter') }, 'Manage rules'),
+    h('button', { type: 'button', onclick: () => openOptions('declutter') }, icon('external-link'), 'Manage rules'),
   );
   await refresh();
 }

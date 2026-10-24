@@ -1,7 +1,7 @@
 import '../../lib/messages.js';
 import '../../lib/storage.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
@@ -31,9 +31,9 @@ export async function render(container, tab) {
   const modes = h('div', { className: 'tabs', role: 'listbox', 'aria-label': 'Mode for this site' });
   const hint = h('p', { className: 'muted' });
   const summary = h('p', { className: 'muted' });
-  const forget = h('button', { type: 'button', className: 'small', hidden: true }, 'Check again');
+  const forget = h('button', { type: 'button', className: 'small', hidden: true }, icon('refresh-cw'), 'Check again');
   const detail = h('div', { className: 'row' }, summary, forget);
-  const manage = h('button', { type: 'button', onclick: () => openOptions('dark') }, 'Manage sites');
+  const manage = h('button', { type: 'button', onclick: () => openOptions('dark') }, icon('external-link'), 'Manage sites');
 
   const refresh = async () => {
     if (!page) return;

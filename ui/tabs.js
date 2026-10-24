@@ -1,8 +1,8 @@
-import { h } from './dom.js';
+import { h, icon } from './dom.js';
 
 export function mountTabs(nav, main, entries, { initial, onSelect } = {}) {
   const tabs = entries.map((entry) => {
-    const button = h('button', { type: 'button', role: 'tab', id: `tab-${entry.id}` }, entry.label);
+    const button = h('button', { type: 'button', role: 'tab', id: `tab-${entry.id}` }, icon(entry.icon), entry.label);
     const panel = h('section', { role: 'tabpanel', hidden: true, 'aria-labelledby': button.id });
     nav.append(button);
     main.append(panel);

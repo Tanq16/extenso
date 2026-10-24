@@ -1,6 +1,6 @@
 import '../../lib/messages.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
@@ -14,13 +14,13 @@ export async function render(container) {
   const status = h('p', { className: 'status' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'Nothing captured yet.');
-  const clear = h('button', { type: 'button', className: 'small danger' }, 'Clear');
+  const clear = h('button', { type: 'button', className: 'small danger' }, icon('trash-2'), 'Clear');
 
   const copy = async (button, value) => {
     try {
       await navigator.clipboard.writeText(value);
-      button.textContent = 'Copied';
-      setTimeout(() => (button.textContent = 'Copy'), 1200);
+      button.replaceChildren(icon('check'), 'Copied');
+      setTimeout(() => button.replaceChildren(icon('copy'), 'Copy'), 1200);
     } catch (error) {
       setStatus(status, error.message, 'error');
     }
@@ -37,7 +37,7 @@ export async function render(container) {
         ),
         h('span', { className: 'mono muted truncate' }, preview(row.value)),
       ),
-      h('button', { type: 'button', className: 'small', onclick: (event) => copy(event.target, row.value) }, 'Copy'),
+      h('button', { type: 'button', className: 'small', onclick: (event) => copy(event.currentTarget, row.value) }, icon('copy'), 'Copy'),
     )));
     list.hidden = !captured.length;
     clear.hidden = !captured.length;
@@ -62,7 +62,7 @@ export async function render(container) {
       empty,
       status,
     ),
-    h('button', { type: 'button', onclick: () => openOptions('siphon') }, 'Manage rules'),
+    h('button', { type: 'button', onclick: () => openOptions('siphon') }, icon('external-link'), 'Manage rules'),
   );
   await draw();
 }

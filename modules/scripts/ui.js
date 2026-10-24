@@ -1,7 +1,7 @@
 import '../../lib/messages.js';
 import '../../lib/storage.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 
 const { messages, storage } = globalThis.extenso;
 
@@ -16,7 +16,7 @@ export async function availabilityNotice() {
   }
   return h('p', { className: 'status warning row' },
     h('span', { className: 'grow' }, 'Turn on "Allow User Scripts" on the extension\'s details page to run scripts.'),
-    h('button', { type: 'button', className: 'small', onclick: openDetails }, 'Open details'),
+    h('button', { type: 'button', className: 'small', onclick: openDetails }, icon('external-link'), 'Open details'),
   );
 }
 
@@ -37,6 +37,6 @@ export function runButton(script, status, target) {
         button.disabled = false;
       }
     },
-  }, 'Run');
+  }, icon('play'), 'Run');
   return button;
 }

@@ -1,7 +1,7 @@
 import '../../lib/storage.js';
 import '../../lib/match.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 
 const { storage, match, modules } = globalThis.extenso;
@@ -92,12 +92,12 @@ export async function render(container) {
   };
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: save },
-    h('div', { className: 'row' }, title, h('button', { type: 'button', className: 'small', onclick: close }, 'Cancel')),
+    h('div', { className: 'row' }, title, h('button', { type: 'button', className: 'small', onclick: close }, icon('x'), 'Cancel')),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'Match patterns, one per line', matches),
     h('label', { className: 'field' }, 'Hide selectors, one per line', hide),
     h('label', { className: 'field' }, 'Remove selectors, one per line, for content that loads later', remove),
-    h('button', { type: 'submit', className: 'primary' }, 'Save'),
+    h('button', { type: 'submit', className: 'primary' }, icon('check'), 'Save'),
   );
 
   const draw = () => {
@@ -111,7 +111,7 @@ export async function render(container) {
           { disabledHosts: settings.disabledHosts.filter((other) => other !== host) },
           `Declutter on for ${host}.`,
         ),
-      }, 'Turn on'),
+      }, icon('power'), 'Turn on'),
     )));
     builtins.replaceChildren(...[...Map.groupBy(builtinsOf(settings), (rule) => rule.site)].map(([site, rules]) => h('div', { className: 'stack' },
       h('div', { className: 'row' },
@@ -126,7 +126,7 @@ export async function render(container) {
       ruleToggle(rule),
       h('span', {}, rule.name),
       h('span', { className: 'muted mono grow truncate' }, rule.matches.join('  ')),
-      h('button', { type: 'button', className: 'small', onclick: () => open(rule) }, 'Edit'),
+      h('button', { type: 'button', className: 'small', onclick: () => open(rule) }, icon('pencil'), 'Edit'),
       h('button', {
         type: 'button',
         className: 'small danger',
@@ -134,7 +134,7 @@ export async function render(container) {
           if (editing === rule.id) close();
           persist({ rules: settings.rules.filter((other) => other.id !== rule.id) }, `Deleted ${rule.name}.`);
         },
-      }, 'Delete'),
+      }, icon('trash-2'), 'Delete'),
     )));
   };
 
@@ -156,7 +156,7 @@ export async function render(container) {
       h('h2', {}, 'Your rules'),
       list,
       empty,
-      h('button', { type: 'button', className: 'primary', onclick: () => open(null) }, 'Add rule'),
+      h('button', { type: 'button', className: 'primary', onclick: () => open(null) }, icon('plus'), 'Add rule'),
     ),
     form,
     status,

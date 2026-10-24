@@ -9,6 +9,10 @@ export function h(tag, props = {}, ...children) {
   return element;
 }
 
+export function icon(name) {
+  return h('span', { className: 'icon', 'aria-hidden': 'true', style: `--icon: url("/third_party/lucide/icons/${name}.svg")` });
+}
+
 export function setStatus(element, message, type = 'info') {
   element.textContent = message;
   element.className = `status ${type}`;

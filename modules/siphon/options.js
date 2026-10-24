@@ -1,7 +1,7 @@
 import '../../lib/storage.js';
 import '../../lib/match.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 
 const { storage, match } = globalThis.extenso;
@@ -95,8 +95,8 @@ function editor(rule, { onSave, onCancel }) {
   return h('form', { className: 'card', onsubmit: save },
     h('div', { className: 'row' },
       h('h2', { className: 'grow' }, rule.id ? 'Edit rule' : 'New rule'),
-      h('button', { type: 'button', className: 'small', onclick: onCancel }, 'Cancel'),
-      h('button', { type: 'submit', className: 'small primary' }, 'Save'),
+      h('button', { type: 'button', className: 'small', onclick: onCancel }, icon('x'), 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, icon('check'), 'Save'),
     ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'Scope match pattern', pattern),
@@ -165,12 +165,12 @@ export async function render(container) {
           h('div', { className: 'row' }, h('strong', {}, rule.name), h('span', { className: 'badge info' }, meta(rule.source).label)),
           h('span', { className: 'mono muted truncate' }, rule.scope.pattern),
         ),
-        h('button', { type: 'button', className: 'small', onclick: () => openEditor(rule) }, 'Edit'),
+        h('button', { type: 'button', className: 'small', onclick: () => openEditor(rule) }, icon('pencil'), 'Edit'),
         h('button', {
           type: 'button',
           className: 'small danger',
           onclick: () => persist(rules.filter((item) => item.id !== rule.id), `Deleted ${rule.name}.`),
-        }, 'Delete'),
+        }, icon('trash-2'), 'Delete'),
       );
     }));
     list.hidden = !rules.length;
@@ -182,7 +182,7 @@ export async function render(container) {
     h('section', { className: 'card' },
       h('div', { className: 'row' },
         h('h2', { className: 'grow' }, 'Rules'),
-        h('button', { type: 'button', className: 'small primary', onclick: () => openEditor(blank()) }, 'Add rule'),
+        h('button', { type: 'button', className: 'small primary', onclick: () => openEditor(blank()) }, icon('plus'), 'Add rule'),
       ),
       list,
       empty,

@@ -1,7 +1,7 @@
 import '../../lib/match.js';
 import '../../lib/storage.js';
 import './module.js';
-import { h } from '../../ui/dom.js';
+import { h, icon } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 import { availabilityNotice, runButton } from './ui.js';
@@ -22,6 +22,6 @@ export async function render(container, tab) {
     await moduleCard('scripts'),
     await availabilityNotice(),
     h('section', { className: 'card' }, h('h2', {}, 'Run on this page'), list, status),
-    h('button', { type: 'button', onclick: () => openOptions('scripts') }, 'Manage scripts'),
+    h('button', { type: 'button', onclick: () => openOptions('scripts') }, icon('external-link'), 'Manage scripts'),
   ].filter(Boolean));
 }

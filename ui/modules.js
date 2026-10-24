@@ -1,6 +1,15 @@
 import '../lib/storage.js';
 import { h, setStatus } from './dom.js';
 
+export const ICONS = {
+  newtab: 'app-window',
+  scripts: 'code',
+  siphon: 'key-round',
+  dark: 'moon',
+  declutter: 'eraser',
+  relay: 'send',
+};
+
 const SWITCHES = {
   newtab: 'Redirect new tabs',
   scripts: 'Run scripts',

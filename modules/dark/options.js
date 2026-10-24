@@ -1,7 +1,7 @@
 import '../../lib/messages.js';
 import '../../lib/storage.js';
 import './module.js';
-import { h, setStatus } from '../../ui/dom.js';
+import { h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -22,7 +22,7 @@ export async function render(container) {
   const noOverrides = h('p', { className: 'empty' }, 'No site overrides. Set one from the popup.');
   const cache = h('ul', { className: 'list' });
   const noCache = h('p', { className: 'empty' }, 'No sites detected as dark yet.');
-  const clear = h('button', { type: 'button', className: 'small danger' }, 'Clear all');
+  const clear = h('button', { type: 'button', className: 'small danger' }, icon('trash-2'), 'Clear all');
 
   const run = async (task, message, target) => {
     try {
@@ -38,7 +38,7 @@ export async function render(container) {
     className: 'small danger',
     'aria-label': label,
     onclick: () => run(task, message, target),
-  }, 'Remove');
+  }, icon('x'), 'Remove');
 
   const fill = (list, empty, items) => {
     list.replaceChildren(...items);
