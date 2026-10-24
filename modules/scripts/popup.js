@@ -6,12 +6,12 @@ import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 import { availabilityNotice, runButton } from './ui.js';
 
-const { match, storage } = globalThis.extenso;
+const { match, storage, modules } = globalThis.extenso;
 
 export async function render(container, tab) {
-  const { items } = await storage.getSettings('scripts');
+  const settings = await storage.getSettings('scripts');
   const status = h('p', { className: 'status' });
-  const scripts = items.filter((item) =>
+  const scripts = modules.scripts.scriptsOf(settings).filter((item) =>
     item.enabled && item.trigger === 'manual' && match.matchesAny(item.matches, tab?.url ?? ''));
   const list = scripts.length
     ? h('ul', { className: 'list' }, scripts.map((script) =>

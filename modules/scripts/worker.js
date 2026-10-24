@@ -6,7 +6,8 @@ const MENU = scriptId('scripts', 'run');
 const MENU_ITEM = `${MENU}:`;
 const PREFIX = scriptId('scripts', '');
 const CONTEXTS = ['page', 'frame', 'selection', 'link', 'editable', 'image', 'video', 'audio'];
-const { storage } = globalThis.extenso;
+const { storage, modules } = globalThis.extenso;
+const { scriptsOf, sourceOf } = modules.scripts;
 
 const isAvailable = async () => {
   try {
@@ -54,10 +55,10 @@ const syncRegistrations = async (scripts) => {
     .map(({ id }) => id)
     .filter((id) => id.startsWith(PREFIX));
   if (ids.length) await chrome.userScripts.unregister({ ids });
-  const results = await Promise.allSettled(scripts.map((script) => chrome.userScripts.register([{
+  const results = await Promise.allSettled(scripts.map(async (script) => chrome.userScripts.register([{
     id: PREFIX + script.id,
     matches: script.matches,
-    js: [{ code: script.code }],
+    js: [{ code: await sourceOf(script) }],
     runAt: script.runAt,
     world: script.world,
   }])));
@@ -65,8 +66,10 @@ const syncRegistrations = async (scripts) => {
     result.status === 'rejected' ? [[scripts[index].id, result.reason?.message ?? String(result.reason)]] : []));
 };
 
-export async function sync({ enabled, items }) {
-  const active = enabled ? items.filter((item) => item.enabled && item.matches.length && item.code) : [];
+export async function sync(settings) {
+  const active = settings.enabled
+    ? scriptsOf(settings).filter((item) => item.enabled && item.matches.length && (item.file || item.code))
+    : [];
   await syncMenus(active.filter((item) => item.trigger === 'manual'));
   const available = await isAvailable();
   const errors = available ? await syncRegistrations(active.filter((item) => item.trigger === 'auto')) : {};
@@ -85,15 +88,15 @@ return { error: String(error?.message ?? error) };
 })()`;
 
 const run = async (id, tabId) => {
-  const { enabled, items } = await storage.getSettings('scripts');
-  if (!enabled) throw new Error('Scripts are turned off.');
-  const script = items.find((item) => item.id === id);
+  const settings = await storage.getSettings('scripts');
+  if (!settings.enabled) throw new Error('Scripts are turned off.');
+  const script = scriptsOf(settings).find((item) => item.id === id);
   if (!script) throw new Error('Script not found.');
   if (tabId == null) throw new Error('No tab to run on.');
   if (!(await isAvailable())) throw new Error('Turn on "Allow User Scripts" on the extension\'s details page.');
   const [injection] = await chrome.userScripts.execute({
     target: { tabId },
-    js: [{ code: guard(script.code) }],
+    js: [{ code: guard(await sourceOf(script)) }],
     world: script.world,
   });
   const outcome = injection?.error ?? injection?.result?.error;

@@ -1,7 +1,7 @@
 import '../../lib/storage.js';
 import '../../lib/match.js';
 import './module.js';
-import { h, icon, setStatus } from '../../ui/dom.js';
+import { group, h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 
 const { storage, match, modules } = globalThis.extenso;
@@ -56,17 +56,9 @@ export async function render(container) {
 
   const groups = [...Map.groupBy(builtinsOf(settings), (rule) => rule.site)].map(([site, rules]) => {
     const status = h('p', { className: 'status' });
-    const badge = h('span');
     const inputs = new Map(rules.map((rule) => [rule.id, ruleToggle(rule, status)]));
-    return {
-      badge,
-      inputs,
-      element: h('details', { className: 'group' },
-        h('summary', {}, icon('chevron-right'), h('h3', { className: 'grow' }, site), badge),
-        h('ul', { className: 'list' }, rules.map((rule) => h('li', {}, inputs.get(rule.id), h('span', { className: 'grow' }, rule.name)))),
-        status,
-      ),
-    };
+    const rows = rules.map((rule) => h('li', {}, inputs.get(rule.id), h('span', { className: 'grow' }, rule.name)));
+    return { inputs, ...group(site, rows, status) };
   });
 
   const open = (rule) => {
@@ -139,11 +131,9 @@ export async function render(container) {
       }, icon('trash-2'), 'Delete'),
     )));
     const enabled = new Map(builtinsOf(settings).map((rule) => [rule.id, rule.enabled]));
-    for (const { badge, inputs } of groups) {
+    for (const { inputs, count } of groups) {
       for (const [id, input] of inputs) input.checked = enabled.get(id);
-      const on = [...inputs.keys()].filter((id) => enabled.get(id)).length;
-      badge.className = on ? 'badge info' : 'badge';
-      badge.textContent = `${on} of ${inputs.size} on`;
+      count([...inputs.keys()].filter((id) => enabled.get(id)).length, inputs.size);
     }
     fill(sites, noSites, settings.disabledHosts.toSorted().map((host) => h('li', {},
       h('span', { className: 'grow mono truncate' }, host),

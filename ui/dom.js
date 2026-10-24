@@ -13,6 +13,20 @@ export function icon(name) {
   return h('span', { className: 'icon', 'aria-hidden': 'true', style: `--icon: url("/third_party/lucide/icons/${name}.svg")` });
 }
 
+export function group(title, rows, status) {
+  const badge = h('span');
+  const element = h('details', { className: 'group' },
+    h('summary', {}, icon('chevron-right'), h('h3', { className: 'grow' }, title), badge),
+    h('ul', { className: 'list' }, rows),
+    status,
+  );
+  const count = (on, total) => {
+    badge.className = on ? 'badge info' : 'badge';
+    badge.textContent = `${on} of ${total} on`;
+  };
+  return { element, count };
+}
+
 export function setStatus(element, message, type = 'info') {
   element.textContent = message;
   element.className = `status ${type}`;

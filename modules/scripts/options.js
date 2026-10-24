@@ -1,11 +1,12 @@
 import '../../lib/match.js';
 import '../../lib/storage.js';
 import './module.js';
-import { h, icon, setStatus } from '../../ui/dom.js';
+import { group, h, icon, setStatus } from '../../ui/dom.js';
 import { moduleCard } from '../../ui/modules.js';
 import { availabilityNotice, runButton } from './ui.js';
 
-const { match, storage } = globalThis.extenso;
+const { match, storage, modules } = globalThis.extenso;
+const { builtinsOf, sourceOf } = modules.scripts;
 const BOOKMARKLET = /^\s*javascript:/i;
 const WEB_PAGE = /^(https?|file):/;
 
@@ -44,6 +45,11 @@ const mutate = async (change) => {
   await storage.updateSettings('scripts', { items: change(items) });
 };
 
+const setBuiltin = async (id, enabled) => {
+  const { builtins } = await storage.getSettings('scripts');
+  await storage.updateSettings('scripts', { builtins: { ...builtins, [id]: enabled } });
+};
+
 const replace = (items, script) => items.some((item) => item.id === script.id)
   ? items.map((item) => (item.id === script.id ? script : item))
   : [...items, script];
@@ -64,12 +70,12 @@ export async function render(container) {
   );
   let editing = null;
 
-  const attempt = async (action, success) => {
+  const attempt = async (action, success, target = status) => {
     try {
       await action();
-      if (success) setStatus(status, success, 'success');
+      if (success) setStatus(target, success, 'success');
     } catch (error) {
-      setStatus(status, error.message, 'error');
+      setStatus(target, error.message, 'error');
     }
   };
 
@@ -88,10 +94,70 @@ export async function render(container) {
   const title = h('h2', { className: 'grow' });
   trigger.addEventListener('change', () => { runAt.disabled = trigger.value !== 'auto'; });
 
+  const customize = async (script, target) => {
+    try {
+      open({
+        ...blank(),
+        name: `${script.name} copy`,
+        code: await sourceOf(script),
+        trigger: script.trigger,
+        world: script.world,
+        runAt: script.runAt,
+        matches: script.matches,
+      }, 'New script');
+    } catch (error) {
+      setStatus(target, error.message, 'error');
+    }
+  };
+
+  const builtinRow = (script, target) => {
+    const auto = script.trigger === 'auto';
+    const toggle = h('input', {
+      type: 'checkbox',
+      className: 'toggle',
+      onchange: () => attempt(() => setBuiltin(script.id, toggle.checked), `${script.name} ${toggle.checked ? 'on' : 'off'}.`, target),
+    });
+    const error = h('span', { className: 'badge error', hidden: true }, 'Not registered');
+    const element = h('li', {},
+      toggle,
+      h('div', { className: 'grow' },
+        h('h3', { className: 'truncate' }, script.name),
+        h('p', { className: 'muted' }, script.description),
+      ),
+      error,
+      script.world === 'MAIN' && h('span', { className: 'badge' }, 'Main world'),
+      h('span', { className: `badge ${auto ? 'info' : ''}` }, auto ? 'Automatic' : 'Manual'),
+      runButton(script, target, lastWebTab),
+      h('button', { type: 'button', className: 'small', onclick: () => customize(script, target) }, icon('copy-plus'), 'Customize'),
+    );
+    return { id: script.id, toggle, error, element };
+  };
+
+  const builtinGroups = [...Map.groupBy(builtinsOf(await storage.getSettings('scripts')), (script) => script.site)]
+    .map(([site, scripts]) => {
+      const groupStatus = h('p', { className: 'status' });
+      const rows = scripts.map((script) => builtinRow(script, groupStatus));
+      return { rows, ...group(site, rows.map(({ element }) => element), groupStatus) };
+    });
+  const builtinCard = h('section', { className: 'card' },
+    h('h2', {}, 'Built-in scripts'),
+    h('div', { className: 'list' }, builtinGroups.map(({ element }) => element)),
+  );
+
   const refresh = async () => {
     const [settings, { errors }] = await Promise.all([storage.getSettings('scripts'), storage.getState('scripts')]);
     list.replaceChildren(...settings.items.map((script) => row(script, errors[script.id])));
+    const enabled = new Map(builtinsOf(settings).map((script) => [script.id, script.enabled]));
+    for (const { rows, count } of builtinGroups) {
+      for (const { id, toggle, error } of rows) {
+        toggle.checked = enabled.get(id);
+        error.hidden = !errors[id];
+        error.title = errors[id] ?? '';
+      }
+      count(rows.filter(({ id }) => enabled.get(id)).length, rows.length);
+    }
     listCard.hidden = Boolean(editing);
+    builtinCard.hidden = Boolean(editing);
     list.hidden = !settings.items.length;
     empty.hidden = settings.items.length > 0;
   };
@@ -110,6 +176,7 @@ export async function render(container) {
     matches.value = script.matches.join('\n');
     form.hidden = false;
     listCard.hidden = true;
+    builtinCard.hidden = true;
     name.focus();
   };
 
@@ -215,6 +282,7 @@ export async function render(container) {
     await availabilityNotice(),
     listCard,
     form,
+    builtinCard,
   ].filter(Boolean));
   await refresh();
 }
