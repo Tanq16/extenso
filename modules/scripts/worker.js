@@ -50,6 +50,10 @@ const syncMenus = async (scripts) => {
   }
 };
 
+const isolate = (code) => `(() => {
+${code}
+})();`;
+
 const syncRegistrations = async (scripts) => {
   const ids = (await chrome.userScripts.getScripts())
     .map(({ id }) => id)
@@ -58,7 +62,7 @@ const syncRegistrations = async (scripts) => {
   const results = await Promise.allSettled(scripts.map(async (script) => chrome.userScripts.register([{
     id: PREFIX + script.id,
     matches: script.matches,
-    js: [{ code: await sourceOf(script) }],
+    js: [{ code: isolate(await sourceOf(script)) }],
     runAt: script.runAt,
     world: script.world,
   }])));
