@@ -17,10 +17,11 @@ const fill = (list, empty, items) => {
 
 export async function render(container) {
   let settings = normalize(await storage.getSettings('declutter'));
-  const status = h('p', { className: 'status' });
+  const rulesStatus = h('p', { className: 'status' });
+  const formStatus = h('p', { className: 'status' });
+  const sitesStatus = h('p', { className: 'status' });
   const sites = h('ul', { className: 'list' });
   const noSites = h('p', { className: 'empty' }, 'No sites turned off. Turn one off from the popup.');
-  const builtins = h('div', { className: 'stack' });
   const list = h('ul', { className: 'list' });
   const empty = h('p', { className: 'empty' }, 'No rules yet.');
   const title = h('h2', { className: 'grow' });
@@ -30,14 +31,17 @@ export async function render(container) {
   const remove = h('textarea', { className: 'code', spellcheck: false });
   let editing = null;
 
-  const persist = async (patch, message) => {
+  const persist = async (patch, message, status) => {
     try {
       settings = normalize(await storage.updateSettings('declutter', patch));
       setStatus(status, message, 'success');
+      return true;
     } catch (error) {
       setStatus(status, error.message, 'error');
+      return false;
+    } finally {
+      draw();
     }
-    draw();
   };
 
   const toggle = (checked, onchange) => {
@@ -45,9 +49,24 @@ export async function render(container) {
     return input;
   };
 
-  const ruleToggle = (rule) => toggle(rule.enabled, (checked) => {
+  const ruleToggle = (rule, status) => toggle(rule.enabled, (checked) => {
     const { builtins, rules } = withEnabled(settings, rule.id, checked);
-    return persist({ builtins, rules }, `${rule.name} ${checked ? 'on' : 'off'}.`);
+    return persist({ builtins, rules }, `${rule.name} ${checked ? 'on' : 'off'}.`, status);
+  });
+
+  const groups = [...Map.groupBy(builtinsOf(settings), (rule) => rule.site)].map(([site, rules]) => {
+    const status = h('p', { className: 'status' });
+    const badge = h('span');
+    const inputs = new Map(rules.map((rule) => [rule.id, ruleToggle(rule, status)]));
+    return {
+      badge,
+      inputs,
+      element: h('details', { className: 'group' },
+        h('summary', {}, icon('chevron-right'), h('h3', { className: 'grow' }, site), badge),
+        h('ul', { className: 'list' }, rules.map((rule) => h('li', {}, inputs.get(rule.id), h('span', { className: 'grow' }, rule.name)))),
+        status,
+      ),
+    };
   });
 
   const open = (rule) => {
@@ -57,6 +76,7 @@ export async function render(container) {
     matches.value = rule?.matches.join('\n') ?? '';
     hide.value = rule?.hide.join('\n') ?? '';
     remove.value = rule?.remove.join('\n') ?? '';
+    setStatus(formStatus, '');
     form.hidden = false;
     name.focus();
   };
@@ -66,7 +86,7 @@ export async function render(container) {
     form.hidden = true;
   };
 
-  const save = (event) => {
+  const save = async (event) => {
     event.preventDefault();
     const rule = {
       name: name.value.trim(),
@@ -81,26 +101,50 @@ export async function render(container) {
       || (!rule.hide.length && !rule.remove.length && 'Add at least one selector to hide or remove.')
       || (badSelectors.length && `Invalid selectors: ${badSelectors.join(', ')}`);
     if (problem) {
-      setStatus(status, problem, 'error');
+      setStatus(formStatus, problem, 'error');
       return;
     }
     const rules = editing
       ? settings.rules.map((other) => (other.id === editing ? { ...other, ...rule } : other))
       : [...settings.rules, { id: crypto.randomUUID(), enabled: true, ...rule }];
-    close();
-    persist({ rules }, `Saved ${rule.name}.`);
+    if (await persist({ rules }, `Saved ${rule.name}.`, rulesStatus)) close();
   };
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: save },
-    h('div', { className: 'row' }, title, h('button', { type: 'button', className: 'small', onclick: close }, icon('x'), 'Cancel')),
+    h('div', { className: 'row' },
+      title,
+      h('button', { type: 'button', className: 'small', onclick: close }, icon('x'), 'Cancel'),
+      h('button', { type: 'submit', className: 'small primary' }, icon('check'), 'Save'),
+    ),
     h('label', { className: 'field' }, 'Name', name),
     h('label', { className: 'field' }, 'Match patterns, one per line', matches),
     h('label', { className: 'field' }, 'Hide selectors, one per line', hide),
     h('label', { className: 'field' }, 'Remove selectors, one per line, for content that loads later', remove),
-    h('button', { type: 'submit', className: 'primary' }, icon('check'), 'Save'),
+    formStatus,
   );
 
   const draw = () => {
+    fill(list, empty, settings.rules.map((rule) => h('li', {},
+      ruleToggle(rule, rulesStatus),
+      h('span', {}, rule.name),
+      h('span', { className: 'muted mono grow truncate' }, rule.matches.join('  ')),
+      h('button', { type: 'button', className: 'small', onclick: () => open(rule) }, icon('pencil'), 'Edit'),
+      h('button', {
+        type: 'button',
+        className: 'small danger',
+        onclick: () => {
+          if (editing === rule.id) close();
+          persist({ rules: settings.rules.filter((other) => other.id !== rule.id) }, `Deleted ${rule.name}.`, rulesStatus);
+        },
+      }, icon('trash-2'), 'Delete'),
+    )));
+    const enabled = new Map(builtinsOf(settings).map((rule) => [rule.id, rule.enabled]));
+    for (const { badge, inputs } of groups) {
+      for (const [id, input] of inputs) input.checked = enabled.get(id);
+      const on = [...inputs.keys()].filter((id) => enabled.get(id)).length;
+      badge.className = on ? 'badge info' : 'badge';
+      badge.textContent = `${on} of ${inputs.size} on`;
+    }
     fill(sites, noSites, settings.disabledHosts.toSorted().map((host) => h('li', {},
       h('span', { className: 'grow mono truncate' }, host),
       h('button', {
@@ -110,31 +154,9 @@ export async function render(container) {
         onclick: () => persist(
           { disabledHosts: settings.disabledHosts.filter((other) => other !== host) },
           `Declutter on for ${host}.`,
+          sitesStatus,
         ),
       }, icon('power'), 'Turn on'),
-    )));
-    builtins.replaceChildren(...[...Map.groupBy(builtinsOf(settings), (rule) => rule.site)].map(([site, rules]) => h('div', { className: 'stack' },
-      h('div', { className: 'row' },
-        h('h3', {}, site),
-        h('span', { className: 'badge' }, `${rules.filter((rule) => rule.enabled).length} of ${rules.length} on`)),
-      h('ul', { className: 'list' }, rules.map((rule) => h('li', {},
-        ruleToggle(rule),
-        h('span', { className: 'grow' }, rule.name),
-      ))),
-    )));
-    fill(list, empty, settings.rules.map((rule) => h('li', {},
-      ruleToggle(rule),
-      h('span', {}, rule.name),
-      h('span', { className: 'muted mono grow truncate' }, rule.matches.join('  ')),
-      h('button', { type: 'button', className: 'small', onclick: () => open(rule) }, icon('pencil'), 'Edit'),
-      h('button', {
-        type: 'button',
-        className: 'small danger',
-        onclick: () => {
-          if (editing === rule.id) close();
-          persist({ rules: settings.rules.filter((other) => other.id !== rule.id) }, `Deleted ${rule.name}.`);
-        },
-      }, icon('trash-2'), 'Delete'),
     )));
   };
 
@@ -144,22 +166,24 @@ export async function render(container) {
       settings = normalize(await storage.getSettings('declutter'));
       draw();
     } catch (error) {
-      setStatus(status, error.message, 'error');
+      setStatus(rulesStatus, error.message, 'error');
     }
   });
 
   container.append(
     await moduleCard('declutter'),
-    h('section', { className: 'card' }, h('h2', {}, 'Sites turned off'), sites, noSites),
-    h('section', { className: 'card' }, h('h2', {}, 'Built-in rules'), builtins),
     h('section', { className: 'card' },
-      h('h2', {}, 'Your rules'),
+      h('div', { className: 'row' },
+        h('h2', { className: 'grow' }, 'Your rules'),
+        h('button', { type: 'button', className: 'small primary', onclick: () => open(null) }, icon('plus'), 'Add rule'),
+      ),
       list,
       empty,
-      h('button', { type: 'button', className: 'primary', onclick: () => open(null) }, icon('plus'), 'Add rule'),
+      rulesStatus,
     ),
     form,
-    status,
+    h('section', { className: 'card' }, h('h2', {}, 'Built-in rules'), h('div', { className: 'list' }, groups.map(({ element }) => element))),
+    h('section', { className: 'card' }, h('h2', {}, 'Sites turned off'), sites, noSites, sitesStatus),
   );
   draw();
 }
