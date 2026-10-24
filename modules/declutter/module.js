@@ -14,6 +14,7 @@
       ],
       hide: [
         '.s-result-item.AdHolder',
+        '.s-result-item:has(.puis-sponsored-label-text)',
         '.s-result-item.s-widget:has(.s-widget-sponsored-label-text)',
         '.a-carousel-card:has(.puis-sponsored-label-text)',
       ],
