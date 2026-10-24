@@ -2,6 +2,7 @@ import '../../lib/storage.js';
 import '../../lib/messages.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 
 const { storage, messages, modules } = globalThis.extenso;
 const { payloads } = modules.relay;
@@ -35,7 +36,7 @@ export async function render(container) {
 
   const persist = async (message) => {
     try {
-      await storage.updateSettings('relay', { enabled: settings.enabled, targets: settings.targets });
+      await storage.updateSettings('relay', { targets: settings.targets });
       setStatus(status, message, 'success');
     } catch (error) {
       setStatus(status, error.message, 'error');
@@ -155,11 +156,8 @@ export async function render(container) {
   };
 
   container.append(
+    await moduleCard('relay'),
     h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Relay to local servers', toggle(settings.enabled, (checked) => {
-        settings.enabled = checked;
-        persist(checked ? 'Relay on.' : 'Relay off.');
-      })),
       list,
       empty,
       h('button', { type: 'button', className: 'primary', onclick: () => open(null) }, 'Add target'),

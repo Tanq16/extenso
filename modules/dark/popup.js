@@ -2,6 +2,7 @@ import '../../lib/messages.js';
 import '../../lib/storage.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
 const HINTS = {
@@ -27,18 +28,6 @@ const detection = async (page, expiresAt) => {
 export async function render(container, tab) {
   const page = pageOf(tab);
   const status = h('p', { className: 'status' });
-  const toggle = h('input', {
-    type: 'checkbox',
-    className: 'toggle',
-    onchange: async () => {
-      try {
-        await storage.updateSettings('dark', { enabled: toggle.checked });
-        setStatus(status, toggle.checked ? 'Dark mode on for new page loads.' : 'Dark mode off.', 'success');
-      } catch (error) {
-        setStatus(status, error.message, 'error');
-      }
-    },
-  });
   const modes = h('div', { className: 'tabs', role: 'listbox', 'aria-label': 'Mode for this site' });
   const hint = h('p', { className: 'muted' });
   const summary = h('p', { className: 'muted' });
@@ -47,9 +36,8 @@ export async function render(container, tab) {
   const manage = h('button', { type: 'button', onclick: () => openOptions('dark') }, 'Manage sites');
 
   const refresh = async () => {
-    const [settings, state] = await Promise.all([storage.getSettings('dark'), storage.getState('dark')]);
-    toggle.checked = settings.enabled;
     if (!page) return;
+    const [settings, state] = await Promise.all([storage.getSettings('dark'), storage.getState('dark')]);
     const mode = settings.sites[page.hostname] ?? 'auto';
     const expiresAt = mode === 'auto' ? state.hosts[page.hostname] : undefined;
     for (const button of modes.children) button.setAttribute('aria-selected', String(button.value === mode));
@@ -85,7 +73,7 @@ export async function render(container, tab) {
   });
 
   container.append(
-    h('section', { className: 'card' }, h('label', { className: 'row' }, 'Dark mode', toggle)),
+    await moduleCard('dark'),
     page
       ? h('section', { className: 'card' },
         h('h2', { className: 'truncate' }, page.hostname),

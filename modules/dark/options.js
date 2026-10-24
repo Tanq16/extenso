@@ -2,6 +2,7 @@ import '../../lib/messages.js';
 import '../../lib/storage.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 const { messages, storage, modules } = globalThis.extenso;
@@ -14,7 +15,7 @@ const expiry = (expiresAt) => {
 
 export async function render(container) {
   const status = h('p', { className: 'status' });
-  const toggle = h('input', { type: 'checkbox', className: 'toggle' });
+  const general = h('p', { className: 'status' });
   const ttl = h('input', { type: 'number', min: 1, step: 1 });
   const overrides = h('ul', { className: 'list' });
   const noOverrides = h('p', { className: 'empty' }, 'No site overrides. Set one from the popup.');
@@ -22,12 +23,12 @@ export async function render(container) {
   const noCache = h('p', { className: 'empty' }, 'No sites detected as dark yet.');
   const clear = h('button', { type: 'button', className: 'danger' }, 'Clear all');
 
-  const run = async (task, message) => {
+  const run = async (task, message, target = status) => {
     try {
       await task();
-      setStatus(status, message, 'success');
+      setStatus(target, message, 'success');
     } catch (error) {
-      setStatus(status, error.message, 'error');
+      setStatus(target, error.message, 'error');
     }
   };
 
@@ -46,7 +47,6 @@ export async function render(container) {
 
   const refresh = async () => {
     const [settings, state] = await Promise.all([storage.getSettings('dark'), storage.getState('dark')]);
-    toggle.checked = settings.enabled;
     if (document.activeElement !== ttl) ttl.value = settings.ttlDays;
 
     fill(overrides, noOverrides, Object.entries(settings.sites).sort(([a], [b]) => a.localeCompare(b)).map(([host, mode]) => h('li', {},
@@ -67,17 +67,13 @@ export async function render(container) {
     }));
   };
 
-  toggle.addEventListener('change', () => run(
-    () => storage.updateSettings('dark', { enabled: toggle.checked }),
-    toggle.checked ? 'Dark mode on for new page loads.' : 'Dark mode off.',
-  ));
   ttl.addEventListener('change', () => {
     const days = Math.round(Number(ttl.value));
     if (!(days >= 1)) {
-      setStatus(status, 'Enter at least 1 day.', 'error');
+      setStatus(general, 'Enter at least 1 day.', 'error');
       return;
     }
-    run(() => storage.updateSettings('dark', { ttlDays: days }), `Dark sites are checked again after ${days} days.`);
+    run(() => storage.updateSettings('dark', { ttlDays: days }), `Dark sites are checked again after ${days} days.`, general);
   });
   clear.addEventListener('click', () => run(() => messages.send('dark', 'clearCache'), 'Cleared the dark site cache.'));
 
@@ -86,11 +82,7 @@ export async function render(container) {
   });
 
   container.append(
-    h('section', { className: 'card' },
-      h('h2', {}, 'Dark mode'),
-      h('label', { className: 'row' }, 'Theme pages', toggle),
-      h('label', { className: 'field' }, 'Days before a dark site is checked again', ttl),
-    ),
+    await moduleCard('dark', general, h('label', { className: 'field' }, 'Days before a dark site is checked again', ttl)),
     h('section', { className: 'card' },
       h('h2', {}, 'Site overrides'),
       overrides,

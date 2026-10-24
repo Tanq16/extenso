@@ -2,6 +2,7 @@ import '../../lib/storage.js';
 import '../../lib/match.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 
 const { storage, match, modules } = globalThis.extenso;
 const { isSelector, normalize, builtinsOf, withEnabled } = modules.declutter;
@@ -29,10 +30,9 @@ export async function render(container) {
   const remove = h('textarea', { className: 'code', spellcheck: false });
   let editing = null;
 
-  const persist = async (next, message) => {
+  const persist = async (patch, message) => {
     try {
-      await storage.updateSettings('declutter', next);
-      settings = next;
+      settings = normalize(await storage.updateSettings('declutter', patch));
       setStatus(status, message, 'success');
     } catch (error) {
       setStatus(status, error.message, 'error');
@@ -45,15 +45,10 @@ export async function render(container) {
     return input;
   };
 
-  const ruleToggle = (rule) => toggle(rule.enabled, (checked) => persist(
-    withEnabled(settings, rule.id, checked),
-    `${rule.name} ${checked ? 'on' : 'off'}.`,
-  ));
-
-  const enabled = toggle(settings.enabled, (checked) => persist(
-    { ...settings, enabled: checked },
-    checked ? 'Declutter on.' : 'Declutter off.',
-  ));
+  const ruleToggle = (rule) => toggle(rule.enabled, (checked) => {
+    const { builtins, rules } = withEnabled(settings, rule.id, checked);
+    return persist({ builtins, rules }, `${rule.name} ${checked ? 'on' : 'off'}.`);
+  });
 
   const open = (rule) => {
     editing = rule?.id ?? null;
@@ -93,7 +88,7 @@ export async function render(container) {
       ? settings.rules.map((other) => (other.id === editing ? { ...other, ...rule } : other))
       : [...settings.rules, { id: crypto.randomUUID(), enabled: true, ...rule }];
     close();
-    persist({ ...settings, rules }, `Saved ${rule.name}.`);
+    persist({ rules }, `Saved ${rule.name}.`);
   };
 
   const form = h('form', { className: 'card', hidden: true, onsubmit: save },
@@ -106,7 +101,6 @@ export async function render(container) {
   );
 
   const draw = () => {
-    enabled.checked = settings.enabled;
     fill(sites, noSites, settings.disabledHosts.toSorted().map((host) => h('li', {},
       h('span', { className: 'grow mono truncate' }, host),
       h('button', {
@@ -114,7 +108,7 @@ export async function render(container) {
         className: 'small',
         'aria-label': `Turn on Declutter for ${host}`,
         onclick: () => persist(
-          { ...settings, disabledHosts: settings.disabledHosts.filter((other) => other !== host) },
+          { disabledHosts: settings.disabledHosts.filter((other) => other !== host) },
           `Declutter on for ${host}.`,
         ),
       }, 'Turn on'),
@@ -138,7 +132,7 @@ export async function render(container) {
         className: 'small danger',
         onclick: () => {
           if (editing === rule.id) close();
-          persist({ ...settings, rules: settings.rules.filter((other) => other.id !== rule.id) }, `Deleted ${rule.name}.`);
+          persist({ rules: settings.rules.filter((other) => other.id !== rule.id) }, `Deleted ${rule.name}.`);
         },
       }, 'Delete'),
     )));
@@ -155,7 +149,7 @@ export async function render(container) {
   });
 
   container.append(
-    h('section', { className: 'card' }, h('label', { className: 'row' }, 'Declutter pages', enabled)),
+    await moduleCard('declutter'),
     h('section', { className: 'card' }, h('h2', {}, 'Sites turned off'), sites, noSites),
     h('section', { className: 'card' }, h('h2', {}, 'Built-in rules'), builtins),
     h('section', { className: 'card' },

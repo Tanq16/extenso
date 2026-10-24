@@ -2,6 +2,7 @@ import '../../lib/match.js';
 import '../../lib/storage.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { availabilityNotice, runButton } from './ui.js';
 
 const { match, storage } = globalThis.extenso;
@@ -62,15 +63,6 @@ export async function render(container) {
     }
   };
 
-  const enabled = h('input', {
-    type: 'checkbox',
-    className: 'toggle',
-    onchange: () => attempt(
-      () => storage.updateSettings('scripts', { enabled: enabled.checked }),
-      enabled.checked ? 'Scripts on.' : 'Scripts off.',
-    ),
-  });
-
   const name = h('input', { type: 'text', placeholder: 'Untitled script', spellcheck: false });
   const code = h('textarea', {
     className: 'code',
@@ -88,7 +80,6 @@ export async function render(container) {
 
   const refresh = async () => {
     const [settings, { errors }] = await Promise.all([storage.getSettings('scripts'), storage.getState('scripts')]);
-    enabled.checked = settings.enabled;
     list.replaceChildren(...settings.items.map((script) => row(script, errors[script.id])));
     list.hidden = Boolean(editing) || !settings.items.length;
     empty.hidden = Boolean(editing) || settings.items.length > 0;
@@ -205,9 +196,9 @@ export async function render(container) {
   });
 
   container.append(...[
+    await moduleCard('scripts'),
     h('section', { className: 'card row' },
       h('h2', { className: 'grow' }, 'Scripts'),
-      h('label', { className: 'row muted' }, 'Enabled', enabled),
       h('button', { type: 'button', className: 'primary', onclick: () => open(blank(), 'New script') }, 'New script'),
     ),
     await availabilityNotice(),

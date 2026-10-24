@@ -2,6 +2,7 @@ import '../../lib/storage.js';
 import '../../lib/messages.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
 const { storage, messages, modules } = globalThis.extenso;
@@ -25,22 +26,9 @@ export async function render(container, tab) {
     }
   };
 
-  const enabled = h('input', {
-    type: 'checkbox',
-    className: 'toggle',
-    checked: settings.enabled,
-    onchange: async () => {
-      try {
-        await storage.updateSettings('relay', { enabled: enabled.checked });
-      } catch (error) {
-        setStatus(status, error.message, 'error');
-      }
-    },
-  });
-
   container.append(
+    await moduleCard('relay'),
     h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Relay to local servers', enabled),
       targets.length
         ? h('ul', { className: 'list' }, targets.map((target) => {
           const button = h('button', { type: 'button', className: 'small primary', onclick: () => send(target, button) }, 'Send');

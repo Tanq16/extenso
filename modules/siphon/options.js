@@ -2,6 +2,7 @@ import '../../lib/storage.js';
 import '../../lib/match.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 
 const { storage, match } = globalThis.extenso;
 
@@ -181,6 +182,6 @@ export async function render(container) {
     listCard.replaceChildren(toggle, h('ul', { className: 'list' }, ...items));
   };
 
-  container.append(listCard, slot, status);
+  container.append(await moduleCard('siphon'), listCard, slot, status);
   draw();
 }

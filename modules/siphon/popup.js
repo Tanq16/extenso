@@ -1,6 +1,7 @@
 import '../../lib/messages.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
 const { messages } = globalThis.extenso;
@@ -58,6 +59,7 @@ export async function render(container) {
   };
 
   container.append(
+    await moduleCard('siphon'),
     h('section', { className: 'card' },
       h('div', { className: 'row' },
         h('h2', {}, 'Captured'),

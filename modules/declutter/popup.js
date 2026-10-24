@@ -3,6 +3,7 @@ import '../../lib/match.js';
 import '../../lib/messages.js';
 import './module.js';
 import { h, setStatus } from '../../ui/dom.js';
+import { moduleCard } from '../../ui/modules.js';
 import { openOptions } from '../../ui/tabs.js';
 
 const { storage, match, messages, modules } = globalThis.extenso;
@@ -33,14 +34,12 @@ export async function render(container, tab) {
     }
   };
 
-  const save = async (next) => {
+  const save = async (patch) => {
     try {
-      await storage.updateSettings('declutter', next);
-      settings = next;
+      settings = normalize(await storage.updateSettings('declutter', patch));
     } catch (error) {
       setStatus(status, error.message, 'error');
     }
-    await refresh();
   };
 
   const toggle = (checked, onchange) => {
@@ -50,19 +49,27 @@ export async function render(container, tab) {
 
   const setSite = (checked) => {
     const others = settings.disabledHosts.filter((other) => other !== host);
-    return save({ ...settings, disabledHosts: checked ? others : [...others, host] });
+    return save({ disabledHosts: checked ? others : [...others, host] });
   };
 
+  chrome.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== 'local' || !Object.hasOwn(changes, storage.settingsKey('declutter'))) return;
+    settings = normalize(await storage.getSettings('declutter'));
+    await refresh();
+  });
+
   container.append(
-    h('section', { className: 'card' },
-      h('label', { className: 'row' }, 'Declutter pages', toggle(settings.enabled, (checked) => save({ ...settings, enabled: checked })))),
+    await moduleCard('declutter'),
     h('section', { className: 'card' },
       host && h('h2', { className: 'truncate' }, host),
       host && h('label', { className: 'row' }, 'Declutter this site', toggle(!settings.disabledHosts.includes(host), setSite)),
       rules.length
         ? h('ul', { className: 'list' }, rules.map((rule) => h('li', {},
           h('span', { className: 'grow truncate' }, rule.name),
-          toggle(rule.enabled, (checked) => save(withEnabled(settings, rule.id, checked))),
+          toggle(rule.enabled, (checked) => {
+            const { builtins, rules: custom } = withEnabled(settings, rule.id, checked);
+            return save({ builtins, rules: custom });
+          }),
         )))
         : h('p', { className: 'empty' }, 'No rules match this page.'),
       count,
