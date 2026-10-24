@@ -18,8 +18,8 @@ Siphon reads cookies, headers, request and response bodies, and page storage on 
 - **Scripts** stores bookmarklets and user scripts, runs manual ones from the popup or the right-click menu, and runs automatic ones on matching pages.
 - **Siphon** captures a value from a query parameter, header, body, cookie, or web storage whenever a matching request or page appears.
 - **Siphon's DevTools panel** turns any field of a recorded request, cookie, or storage entry into a prefilled rule.
-- **Dark mode** themes light pages and leaves dark ones alone, with a per-site choice of automatic, dynamic, filter, or off.
-- **Declutter** hides or removes page elements by CSS selector on matching URLs, and ships with a rule for Amazon sponsored results.
+- **Dark mode** themes light pages and leaves dark ones alone, with a per-site choice of Auto, Always, Invert, or Never.
+- **Declutter** hides or removes page elements by CSS selector on matching URLs, with 32 built-in rules for sites such as Google Search, Reddit, X, and YouTube.
 - **Relay** sends the page text, the selection, or a link as JSON to an HTTP endpoint you define.
 - **Settings export and import** moves every module's settings as one JSON file.
 
@@ -74,7 +74,7 @@ Turn on "Allow User Scripts" on the extension's details page after either instal
 
 ## Usage
 
-The toolbar popup has a tab per module with controls for the current page. Its Options button opens the full editors, plus a General tab for export and import. Each module other than Siphon has an on/off toggle, and a module that is off injects nothing into pages. Siphon rules switch on and off one at a time. Match pattern fields use Chrome's match pattern syntax, such as `https://github.com/settings/*`.
+The toolbar popup has a tab per module with its on/off switch and controls for the current page. Its Options button opens the options page, which holds each module's settings and lists, plus a General tab for export and import. A module that is off injects nothing into pages. Declutter and Relay start off. Match pattern fields use Chrome's match pattern syntax, such as `https://github.com/settings/*`.
 
 ### New tab
 
@@ -123,9 +123,9 @@ The popup sets the mode for the current site. Changing it reloads that site's op
 | Mode | Behavior |
 |---|---|
 | Auto | Themes the page unless it is detected as dark |
-| Dynamic | Always recolors the page's styles |
-| Filter | Always inverts the whole page |
-| Off | Never themes |
+| Always | Always recolors the page's styles |
+| Invert | Inverts colors but not images, for sites that Always breaks |
+| Never | Never themes |
 
 - **Detected dark sites** are left unthemed for 30 days by default, then checked again before any theming. The options page sets that period and lists the remembered sites.
 - **Known dark sites** from Dark Reader's bundled list are never themed in Auto.
@@ -133,9 +133,11 @@ The popup sets the mode for the current site. Changing it reloads that site's op
 
 ### Declutter
 
+- **Built-in rules** are grouped by site on the options page. All start off except Amazon sponsored results.
 - **Hide selectors** get `display: none` on pages matching the rule.
 - **Remove selectors** delete elements from the page, including ones added after load.
 - **The popup** lists the rules matching the current page with toggles, and counts the elements hidden and removed.
+- **Declutter this site** in the popup turns Declutter off for the current site. The options page lists those sites.
 
 ### Relay
 
@@ -162,3 +164,4 @@ Export on the General tab downloads `extenso-settings-<date>.json`. Siphon captu
 - **New site fixes** are pulled by adding a host to the allowlist and running `node tools/sync-darkreader-data.mjs <darkreader-checkout>`.
 - **Personal site fixes** go in `modules/dark/fixes.local.config`, in Dark Reader's fix format.
 - **Dark mode** is ported from Dark Reader, whose MIT license is in `third_party/darkreader/LICENSE`.
+- **Icons** come from Lucide 1.61.0, whose ISC license is in `third_party/lucide/LICENSE`.
