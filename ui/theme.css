@@ -44,6 +44,8 @@ code, .mono { font-family: var(--mono); font-size: 13px; }
 .tabs button { flex: 1; white-space: nowrap; background-color: transparent; color: var(--subtext0); }
 .tabs button:hover { background-color: var(--base); color: var(--text); }
 .tabs button[aria-selected="true"] { background-color: var(--surface0); color: var(--text); }
+.tabs.pill { flex-wrap: nowrap; border-radius: 999px; }
+.tabs.pill button { border-radius: 999px; }
 
 [role="tabpanel"], .card, .stack { display: flex; flex-direction: column; gap: 12px; }
 :is([role="tabpanel"], .card, .stack) > button { align-self: flex-start; }
