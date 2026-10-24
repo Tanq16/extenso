@@ -4,7 +4,7 @@ globalThis.extenso.modules.declutter = {
   label: 'Declutter',
   defaults: {
     settings: {
-      enabled: true,
+      enabled: false,
       rules: [
         {
           id: 'amazon-sponsored',
