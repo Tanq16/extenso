@@ -176,6 +176,15 @@ ${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
       remove: [],
     },
     {
+      id: 'reddit-legal-links',
+      site: 'Reddit',
+      name: 'Legal links footer in the right sidebar',
+      enabled: false,
+      matches: ['https://www.reddit.com/*'],
+      hide: ['#right-sidebar-container > .legal-links'],
+      remove: [],
+    },
+    {
       id: 'reddit-columns',
       site: 'Reddit',
       name: 'Feed in columns on wide screens',
