@@ -1,5 +1,17 @@
 (() => {
   const google = ['https://www.google.com/search*', 'https://www.google.ca/search*'];
+  const googleColumns = (scope) => `  ${scope} { grid-template-columns: minmax(0, 260px) minmax(0, 1fr) auto !important; padding-right: 44px; }
+  ${scope} > #center_col { grid-column: 2 !important; max-width: none !important; }
+  ${scope} :is(#rso, [data-extenso-page]) { columns: 620px; column-gap: 64px; }
+  ${scope} :is(#rso, [data-extenso-page]) :is(.MjjYud, .ULSxyf, .SLPe5b) { break-inside: avoid; }`;
+  const redditFeed = ':is(#main-content shreddit-feed, #main-content shreddit-feed > faceplate-batch)';
+  const redditColumns = (scope) => `  ${scope} #subgrid-container:has(> .main-container > #main-content shreddit-feed) { width: 100% !important; }
+  ${scope} .main-container:has(> #main-content shreddit-feed) { grid-template-columns: minmax(0, 1fr) auto !important; }
+  ${scope} ${redditFeed} { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); grid-auto-rows: 1px; grid-auto-flow: dense; column-gap: 32px; align-items: start; }
+  ${scope} #main-content shreddit-feed > :is(faceplate-batch, [slot="load-after"]) { grid-column: 1 / -1; }
+  ${scope} ${redditFeed} > :is(hr, .virtualized-placeholder[style*="height: 0px"]) { display: none; }
+  ${scope} ${redditFeed} > :not(article, shreddit-ad-post, .virtualized-placeholder, faceplate-batch, hr, [slot]) { position: absolute; }
+  ${scope} ${redditFeed} > :is(article, shreddit-ad-post) { border-bottom: 1px solid var(--color-neutral-border-weak); }`;
   const builtins = [
     {
       id: 'amazon-sponsored',
@@ -56,16 +68,18 @@
     {
       id: 'google-two-columns',
       site: 'Google Search',
-      name: 'Results in two columns on wide screens',
+      name: 'Results in columns on wide screens',
       enabled: false,
       matches: google,
       hide: [],
       remove: [],
-      css: `@media (min-width: 1800px) {
-  #rcnt:has(#rso .MjjYud ~ .MjjYud) #center_col { grid-column: 2 / -2 !important; max-width: none !important; }
-  #rcnt:has(#rso .MjjYud ~ .MjjYud) #rhs { grid-column: -2 / -1 !important; max-width: 372px; }
-  #rso:has(.MjjYud ~ .MjjYud) { columns: 2; column-gap: 48px; }
-  #rso :is(.MjjYud, .ULSxyf) { break-inside: avoid; }
+      move: [{ selector: ':is(.SLPe5b, #rso .ULSxyf):has(#eKIzJc)', to: '#rso' }],
+      css: `@media (min-width: 1648px) {
+${googleColumns('#rcnt:not(:has(#rhs)):has(#rso .MjjYud ~ .MjjYud)')}
+}
+@media (min-width: 2064px) {
+${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
+  #rcnt:has(#rso .MjjYud ~ .MjjYud) > #rhs { grid-column: 3 !important; width: 372px; margin-left: 44px; }
 }`,
     },
     {
@@ -162,18 +176,29 @@
       remove: [],
     },
     {
-      id: 'old-reddit-promos',
-      site: 'Old Reddit',
-      name: 'Promoted links and banners',
+      id: 'reddit-legal-links',
+      site: 'Reddit',
+      name: 'Legal links footer in the right sidebar',
       enabled: false,
-      matches: ['https://old.reddit.com/*'],
-      hide: [
-        '.promotedlink:not([style^="height: 1px;"])',
-        '.native-ad-container',
-        '.premium-banner-outer',
-        '.listingsignupbar',
-      ],
+      matches: ['https://www.reddit.com/*'],
+      hide: ['#right-sidebar-container > .legal-links'],
       remove: [],
+    },
+    {
+      id: 'reddit-columns',
+      site: 'Reddit',
+      name: 'Feed in columns on wide screens',
+      enabled: false,
+      matches: ['https://www.reddit.com/*'],
+      hide: [],
+      remove: [],
+      masonry: [`${redditFeed} > :is(article, shreddit-ad-post, .virtualized-placeholder, faceplate-batch)`],
+      css: `@media (min-width: 1600px) {
+${redditColumns('.grid-container.flex-nav-collapsed')}
+}
+@media (min-width: 1880px) {
+${redditColumns('.grid-container')}
+}`,
     },
     {
       id: 'x-promoted',
@@ -269,18 +294,6 @@
       enabled: false,
       matches: ['https://x.com/*'],
       hide: ['button.bg-modal:has(> span.text-secondary + img[width="160"][height="160"])'],
-      remove: [],
-    },
-    {
-      id: 'youtube-watched',
-      site: 'YouTube',
-      name: 'Watched videos',
-      enabled: false,
-      matches: ['https://www.youtube.com/*'],
-      hide: [
-        'ytd-browse:not([page-subtype="history"]) :is(ytd-rich-item-renderer, ytd-grid-video-renderer, ytd-video-renderer):has(.ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment)',
-        ':is(ytd-search, ytd-watch-next-secondary-results-renderer) :is(ytd-video-renderer, yt-lockup-view-model):has(.ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment)',
-      ],
       remove: [],
     },
     {

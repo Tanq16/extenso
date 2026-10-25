@@ -43,13 +43,14 @@
     const stepX = Math.floor(width / Math.min(MAX_ROW_COUNT, Math.ceil(width / CELL_SIZE)));
     const stepY = Math.floor(height / Math.min(MAX_ROW_COUNT, Math.ceil(height / CELL_SIZE)));
     const seen = new Set();
+    const backdrop = parseColor(rootStyle.backgroundColor)?.a === 0 && document.body ? getComputedStyle(document.body) : rootStyle;
 
     for (let y = Math.floor(stepY / 2); y < height; y += stepY) {
       for (let x = Math.floor(stepX / 2); x < width; x += stepX) {
         const element = document.elementFromPoint(x, y);
         if (!element || seen.has(element) || element.tagName === 'IMG') continue;
         seen.add(element);
-        const style = element === document.documentElement ? rootStyle : getComputedStyle(element);
+        const style = element === document.documentElement ? backdrop : getComputedStyle(element);
         const background = parseColor(style.backgroundColor);
         if (!background) return false;
         if (background.r === 24 && background.g === 26 && background.b === 27) return false;
