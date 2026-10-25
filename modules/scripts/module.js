@@ -13,6 +13,7 @@
     manual('regex-search', 'Regex search', 'Highlights every match of a regular expression on the page. Run again to clear.'),
     manual('copy-markdown', 'Copy as Markdown', 'Copies the selection, or the main content of the page, to the clipboard as Markdown.'),
     manual('snipe-mode', 'Snipe mode', 'Deletes the elements you click, or every element matching a CSS selector. Run again to turn off.'),
+    manual('edit-page', 'Edit page', 'Lets you type anywhere on the page. Esc or running again turns it off.'),
     {
       id: 'youtube-hide-watched',
       site: 'YouTube',

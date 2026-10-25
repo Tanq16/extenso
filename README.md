@@ -15,7 +15,7 @@ Siphon reads cookies, headers, request and response bodies, and page storage on 
 ## Features
 
 - **New tab** opens a URL of your choice in place of Chrome's new tab page.
-- **Scripts** stores bookmarklets and user scripts, runs manual ones from the popup or the right-click menu, and runs automatic ones on matching pages, with 11 built-in scripts for any page, YouTube, and Google Search.
+- **Scripts** stores bookmarklets and user scripts, runs manual ones from the popup or the right-click menu, and runs automatic ones on matching pages, with 12 built-in scripts for any page, YouTube, and Google Search.
 - **Siphon** captures a value from a query parameter, header, body, cookie, or web storage whenever a matching request or page appears.
 - **Siphon's DevTools panel** turns any field of a recorded request, cookie, or storage entry into a prefilled rule.
 - **Dark mode** themes light pages and leaves dark ones alone, with a per-site choice of Auto, Always, Invert, or Never.
