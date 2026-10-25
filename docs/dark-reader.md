@@ -92,6 +92,7 @@ Auto, subframe                          -> follow the top host's cached verdict
 - **Cross-origin fetches** go through the service worker, with `credentials: 'omit'`, for `http:` and `https:` URLs only.
 - **Caches** live in memory for the page's lifetime. Dark Reader writes image details to the site's `sessionStorage`.
 - **Inline `!important` declarations** get their override written back on the element with `setProperty(..., 'important')`.
+- **Color attributes**: `bgcolor` is overridden as `background-color`, and a `background` attribute on `html` or `body` as `background-image`. Dark Reader looks both up by attribute name, which throws on `bgcolor` and stops the theme partway through the page.
 - **Background-image selectors** that wait for a matching element first drop `::before`, `::after`, `:hover`, `:focus`, `:focus-visible`, `:focus-within`, `:active`, `:checked`, and `:visited`.
 - **Closed shadow roots** are reached with `chrome.dom.openOrClosedShadowRoot`.
 - **Stopping** removes every style the engine added, in the document and in shadow roots. It restores the inline styles and attributes it wrote, and uninstalls the MAIN-world proxy.
