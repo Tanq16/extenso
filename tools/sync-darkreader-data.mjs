@@ -54,9 +54,6 @@ const write = async (name, text, summary) => {
   console.log(`${name}: ${summary}`);
 };
 
-const darkSites = await readUpstream('dark-sites.config');
-await write('dark-sites.config', darkSites, `${lines(darkSites).length} patterns`);
-
 const hints = await readUpstream('detector-hints.config');
 await write('detector-hints.config', hints, `${blocksOf(hints).length} blocks`);
 

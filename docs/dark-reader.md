@@ -39,7 +39,6 @@ Each file below is a JavaScript port of the Dark Reader source beside it. Dark R
 
 | Extenso file | Dark Reader file | Taken |
 |---|---|---|
-| `dark-sites.config` | `dark-sites.config` | All 1,313 patterns |
 | `detector-hints.config` | `detector-hints.config` | All 231 blocks |
 | `fixes.config` | `dynamic-theme-fixes.config` | 56 of 2,936 blocks |
 | `inversion-fixes.config` | `inversion-fixes.config` | 23 of 249 blocks |
@@ -61,7 +60,6 @@ Each file below is a JavaScript port of the Dark Reader source beside it. Dark R
 site mode Never                         -> nothing
 site mode Invert                        -> CSS filter
 site mode Always                        -> dynamic engine, no detection
-Auto, host never cached, on dark list   -> nothing
 Auto, top frame:
   host cached, not expired              -> nothing
   host cached, expired                  -> detect first, theme only if light
@@ -76,7 +74,9 @@ Auto, subframe                          -> follow the top host's cached verdict
 
 - **Timing**: detection waits for `document.readyState === 'complete'`. Dark Reader samples as soon as the body has content and a stylesheet.
 - **Transparent root**: when `html` has a transparent background, grid points that land on `html` read the background of `body`.
-- **Unmatched hints**: a detector hint whose `MATCH` never matches reports a light page once the page loads. Dark Reader keeps waiting for a match.
+- **Light points**: a page can still read dark when up to a quarter of its grid points read light, so a light cookie banner does not decide the verdict. Dark Reader calls the page light on the first light point.
+- **Declared dark**: a dark `color-scheme` meta, a `dark` class, `data-theme="dark"`, or a matching detector hint counts only while the visible `html` or `body` background is not an opaque light color. Dark Reader trusts the declaration.
+- **Hints**: a detector hint is read once the page loads, and no match reports a light page. Dark Reader acts on the first match and keeps waiting while there is none.
 - **Theme switches**: detection reruns when `html` or `body` changes `class` or `data-theme`, the color-scheme meta changes `content`, or the system color scheme changes. Reruns are debounced by 250 ms.
 - **Subframes** run their own detection only when their hint carries `IFRAME`.
 
@@ -109,13 +109,14 @@ Auto, subframe                          -> follow the top host's cached verdict
 - **Page extras**: PDF handling and `<meta name="theme-color">` rewriting.
 - **Extension features**: runtime config downloads, schedules and automation, color scheme presets, and Dark Reader's popup, options, and DevTools editor.
 - **Other browsers**: the Firefox, Safari, and Manifest V2 code paths.
+- **The dark site list**: Auto decides from detection and saved verdicts alone, without Dark Reader's list of known dark sites.
 - **Most site fixes**: sites off the allowlist get no fixes, so some look worse than under Dark Reader.
 
 ## Updating site data
 
 1. Clone Dark Reader outside this repository with `git clone https://github.com/darkreader/darkreader.git`.
 2. To pull fixes for another site, add its domain to `modules/dark/fixes-allowlist.txt`, one domain per line.
-3. Run `node tools/sync-darkreader-data.mjs <darkreader-checkout>`. It rewrites the four data files and prints how many blocks each kept.
+3. Run `node tools/sync-darkreader-data.mjs <darkreader-checkout>`. It rewrites the three data files and prints how many blocks each kept.
 4. Reload the extension from `chrome://extensions`, since the service worker keeps the parsed data in memory.
 
 ## References

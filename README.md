@@ -129,7 +129,6 @@ The popup sets the mode for the current site. Changing it reloads that site's op
 | Never | Never themes |
 
 - **Detected dark sites** are left unthemed for 30 days by default, then checked again before any theming. The options page sets that period and lists the remembered sites.
-- **Known dark sites** from Dark Reader's bundled list are never themed in Auto.
 - **Check again** in the popup forgets the current site's dark verdict and reloads the tab.
 
 ### Declutter
