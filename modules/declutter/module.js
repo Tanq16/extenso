@@ -201,20 +201,6 @@ ${redditColumns('.grid-container')}
 }`,
     },
     {
-      id: 'old-reddit-promos',
-      site: 'Old Reddit',
-      name: 'Promoted links and banners',
-      enabled: false,
-      matches: ['https://old.reddit.com/*'],
-      hide: [
-        '.promotedlink:not([style^="height: 1px;"])',
-        '.native-ad-container',
-        '.premium-banner-outer',
-        '.listingsignupbar',
-      ],
-      remove: [],
-    },
-    {
       id: 'x-promoted',
       site: 'X',
       name: 'Promoted posts, trends and accounts',
@@ -308,18 +294,6 @@ ${redditColumns('.grid-container')}
       enabled: false,
       matches: ['https://x.com/*'],
       hide: ['button.bg-modal:has(> span.text-secondary + img[width="160"][height="160"])'],
-      remove: [],
-    },
-    {
-      id: 'youtube-watched',
-      site: 'YouTube',
-      name: 'Watched videos',
-      enabled: false,
-      matches: ['https://www.youtube.com/*'],
-      hide: [
-        'ytd-browse:not([page-subtype="history"]) :is(ytd-rich-item-renderer, ytd-grid-video-renderer, ytd-video-renderer):has(.ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment)',
-        ':is(ytd-search, ytd-watch-next-secondary-results-renderer) :is(ytd-video-renderer, yt-lockup-view-model):has(.ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment)',
-      ],
       remove: [],
     },
     {
