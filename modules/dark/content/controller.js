@@ -75,7 +75,7 @@
     const [settings, state, page] = await Promise.all([
       storage.getSettings('dark'),
       storage.getState('dark'),
-      messages.send('dark', 'lookup', { top: topURL, frame: frameURL }),
+      messages.send('dark', 'lookup', { frame: frameURL }),
     ]);
     if (!settings.enabled) return;
     const mode = settings.sites[host] ?? 'auto';
@@ -95,7 +95,6 @@
 
     const expiresAt = state.hosts[host];
     if (isTop && expiresAt > Date.now()) return;
-    if (expiresAt === undefined && page.darkSite) return;
     chrome.storage.onChanged.addListener(onChanged);
     if (isTop) autoTop(expiresAt !== undefined, page.hint);
     else autoFrame(state.hosts, page.hint);

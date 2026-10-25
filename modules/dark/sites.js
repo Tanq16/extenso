@@ -146,9 +146,8 @@ const read = async (name) => {
 let configs = null;
 const load = () => {
   configs ??= Promise.all(
-    ['dark-sites.config', 'fixes.config', 'fixes.local.config', 'inversion-fixes.config', 'detector-hints.config'].map(read),
-  ).then(([darkSites, upstream, local, inversion, hints]) => ({
-    darkSites: parseArray(darkSites),
+    ['fixes.config', 'fixes.local.config', 'inversion-fixes.config', 'detector-hints.config'].map(read),
+  ).then(([upstream, local, inversion, hints]) => ({
     dynamic: [...commonFirst(parseFixes(upstream, DYNAMIC)), ...parseFixes(local, DYNAMIC)],
     inversion: parseFixes(inversion, INVERSION),
     hints: parseFixes(hints, HINTS),
@@ -182,10 +181,9 @@ const inversionFix = (fixes) => {
   };
 };
 
-export async function lookup(top, frame) {
-  const { darkSites, dynamic, inversion, hints } = await load();
+export async function lookup(frame) {
+  const { dynamic, inversion, hints } = await load();
   return {
-    darkSite: isURLInList(top, darkSites),
     fix: dynamicFix(matching(dynamic, frame)),
     inversion: inversionFix(matching(inversion, frame)),
     hint: hints.find((fix) => isURLInList(frame, fix.url)) ?? null,

@@ -105,9 +105,7 @@
 
     const unsetProps = new Set(Object.keys(OVERRIDES));
 
-    const overrideValue = (sourceAttr, sourceCSSProp, modifierCSSProp, cssValue, important = false) => {
-      const targetCSSProp = sourceAttr === 'style' ? sourceCSSProp : sourceAttr;
-
+    const overrideValue = (targetCSSProp, modifierCSSProp, cssValue, important = false) => {
       const setStaticValue = (value) => {
         if (important) {
           const records = importantOriginals.get(element) ?? new Map();
@@ -142,8 +140,8 @@
       } else if (value instanceof Promise) {
         value.then((resolved) => {
           if (!resolved || asyncCancelled) return;
-          if (sourceCSSProp === 'background' && resolved.startsWith('var(--darkreader-bg--')) setStaticValue(resolved);
-          if (sourceCSSProp === 'background-image') {
+          if (targetCSSProp === 'background' && resolved.startsWith('var(--darkreader-bg--')) setStaticValue(resolved);
+          if (targetCSSProp === 'background-image') {
             const isRoot = element === document.documentElement || element === document.body;
             setStaticValue(isRoot && resolved === cssValue ? 'none' : resolved);
           }
@@ -182,24 +180,24 @@
 
     const normalizeHex = (value) => (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(value) ? `#${value}` : value);
 
-    if (element.hasAttribute('bgcolor')) overrideValue('bgcolor', '', 'background-color', normalizeHex(element.getAttribute('bgcolor')));
+    if (element.hasAttribute('bgcolor')) overrideValue('background-color', 'background-color', normalizeHex(element.getAttribute('bgcolor')));
 
     const isRoot = element === document.documentElement || element === document.body;
     if (isRoot && element.getAttribute('background')) {
-      overrideValue('background', '', 'background-image', `url("${getAbsoluteURL(location.href, element.getAttribute('background'))}")`);
+      overrideValue('background-image', 'background-image', `url("${getAbsoluteURL(location.href, element.getAttribute('background'))}")`);
     }
 
     if (element.hasAttribute('color') && element.rel !== 'mask-icon') {
       let value = normalizeHex(element.getAttribute('color'));
       if (/^#?[0-9a-f]{4}$/i.test(value)) value = `#${value.replace('#', '')}00`;
-      overrideValue('color', '', 'color', value);
+      overrideValue('color', 'color', value);
     }
 
     if (isSVGElement) {
       const fill = element.getAttribute('fill');
       if (fill && fill !== 'none' && fill !== 'currentColor') {
         if (element instanceof SVGTextElement) {
-          overrideValue('fill', '', 'color', fill);
+          overrideValue('fill', 'color', fill);
         } else {
           const handleSVGElement = () => {
             const root = getSVGRoot(element);
@@ -213,18 +211,18 @@
               const { width, height } = element.getBoundingClientRect();
               isBg = width > SMALL_SVG_SIZE || height > SMALL_SVG_SIZE;
             }
-            overrideValue('fill', '', isBg ? 'background-color' : 'color', fill);
+            overrideValue('fill', isBg ? 'background-color' : 'color', fill);
           };
           if (isReadyStateComplete()) handleSVGElement();
           else addReadyStateCompleteListener(handleSVGElement);
         }
       }
-      if (element.hasAttribute('stop-color')) overrideValue('stop-color', '', 'background-color', element.getAttribute('stop-color'));
+      if (element.hasAttribute('stop-color')) overrideValue('stop-color', 'background-color', element.getAttribute('stop-color'));
     }
 
     if (element.hasAttribute('stroke')) {
       const cssProp = element instanceof SVGLineElement || element instanceof SVGTextElement ? 'border-color' : 'color';
-      overrideValue('stroke', '', cssProp, element.getAttribute('stroke'));
+      overrideValue('stroke', cssProp, element.getAttribute('stroke'));
     }
 
     if (element.style) {
@@ -232,13 +230,13 @@
         const value = getStyleSource(element, property);
         const important = element.style.getPropertyPriority(property) === 'important' && !property.startsWith('--');
         if (property === 'background-image' && value.includes('url')) {
-          if (isRoot) overrideValue('style', property, property, value, important);
+          if (isRoot) overrideValue(property, property, value, important);
           return;
         }
         if (Object.hasOwn(OVERRIDES, property) || (property.startsWith('--') && !CUSTOM_TO_CSS_PROP[property] && !property.startsWith('--darkreader-'))) {
-          overrideValue('style', property, property, value, important);
+          overrideValue(property, property, value, important);
         } else if (SHORTHAND_OVERRIDES[property] && rawValue.includes('var(')) {
-          overrideValue('style', property, property, value, important);
+          overrideValue(property, property, value, important);
         } else {
           const overridden = CUSTOM_TO_CSS_PROP[property];
           if (!overridden || element.style.getPropertyValue(overridden) || element.hasAttribute(overridden)) return;
@@ -246,7 +244,7 @@
           element.style.setProperty(property, '');
         }
       });
-      if (element instanceof SVGTextElement && element.style.fill) overrideValue('style', 'fill', 'color', element.style.getPropertyValue('fill'));
+      if (element instanceof SVGTextElement && element.style.fill) overrideValue('fill', 'color', element.style.getPropertyValue('fill'));
       if (element.getAttribute('style')?.includes('--')) engine.variables.store.addInlineStyleForMatching(element.style);
     }
 

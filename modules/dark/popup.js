@@ -18,11 +18,10 @@ const pageOf = (tab) => {
   return url && ['http:', 'https:'].includes(url.protocol) ? url : null;
 };
 
-const detection = async (page, expiresAt) => {
+const detection = (expiresAt) => {
   if (expiresAt > Date.now()) return `Detected as dark. Left alone until ${new Date(expiresAt).toLocaleDateString()}.`;
   if (expiresAt !== undefined) return 'Detected as dark before. Checked again on the next visit before theming.';
-  const { darkSite } = await messages.send('dark', 'lookup', { top: page.href, frame: page.href });
-  return darkSite ? 'Known dark site. Left alone.' : '';
+  return '';
 };
 
 export async function render(container, tab) {
@@ -42,7 +41,7 @@ export async function render(container, tab) {
     const expiresAt = mode === 'auto' ? state.hosts[page.hostname] : undefined;
     for (const button of modes.children) button.setAttribute('aria-selected', String(button.value === mode));
     hint.textContent = HINTS[mode];
-    summary.textContent = mode === 'auto' ? await detection(page, expiresAt) : '';
+    summary.textContent = mode === 'auto' ? detection(expiresAt) : '';
     detail.hidden = !summary.textContent;
     forget.hidden = expiresAt === undefined;
   };

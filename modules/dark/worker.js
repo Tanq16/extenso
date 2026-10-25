@@ -104,7 +104,7 @@ export async function onMessage(message) {
     case 'fetch':
       return fetchResource(message);
     case 'lookup':
-      return lookup(urlOf(message.top), urlOf(message.frame));
+      return lookup(urlOf(message.frame));
     case 'remember':
       return updateHosts((hosts, expiresAt) => ({ ...hosts, [hostOf(message.host)]: expiresAt }));
     case 'forget':
