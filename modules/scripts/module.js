@@ -51,7 +51,7 @@
       id: 'youtube-hide-watched',
       site: 'YouTube',
       name: 'Hide watched videos',
-      description: 'Hides videos watched at least 90%, except in history and playlists.',
+      description: 'Hides videos watched at least 50%, except in history and playlists.',
       enabled: false,
       trigger: 'auto',
       world: 'USER_SCRIPT',

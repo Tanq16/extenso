@@ -1,5 +1,5 @@
 (() => {
-  const THRESHOLD = 90;
+  const THRESHOLD = 50;
   const DIM = false;
   const SKIP_PATHS = ['/feed/history', '/playlist'];
 
