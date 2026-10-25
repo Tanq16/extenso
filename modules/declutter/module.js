@@ -1,13 +1,14 @@
 (() => {
   const google = ['https://www.google.com/search*', 'https://www.google.ca/search*'];
-  const googleColumns = (scope) => `  ${scope} { grid-template-columns: minmax(0, 260px) minmax(0, 1fr) auto !important; padding-right: 44px; }
+  const googleColumns = (scope) => `  ${scope} { grid-template-columns: minmax(0, 80px) minmax(0, 1fr) auto !important; padding-right: 44px; }
   ${scope} > #center_col { grid-column: 2 !important; max-width: none !important; }
   ${scope} :is(#rso, [data-extenso-page]) { columns: 620px; column-gap: 64px; }
   ${scope} :is(#rso, [data-extenso-page]) :is(.MjjYud, .ULSxyf, .SLPe5b) { break-inside: avoid; }`;
   const redditFeed = ':is(#main-content shreddit-feed, #main-content shreddit-feed > faceplate-batch)';
   const redditColumns = (scope) => `  ${scope} #subgrid-container:has(> .main-container > #main-content shreddit-feed) { width: 100% !important; }
-  ${scope} .main-container:has(> #main-content shreddit-feed) { grid-template-columns: minmax(0, 1fr) auto !important; }
-  ${scope} ${redditFeed} { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); grid-auto-rows: 1px; grid-auto-flow: dense; column-gap: 32px; align-items: start; }
+  ${scope} .main-container:has(> #main-content shreddit-feed) { grid-template-columns: minmax(0, 1fr) !important; }
+  ${scope} .main-container:has(> #main-content shreddit-feed) > #right-sidebar-container { grid-area: 1 / 2; }
+  ${scope} ${redditFeed} { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); grid-auto-rows: 1px; grid-auto-flow: dense; column-gap: 48px; align-items: start; }
   ${scope} #main-content shreddit-feed > :is(faceplate-batch, [slot="load-after"]) { grid-column: 1 / -1; }
   ${scope} ${redditFeed} > :is(hr, .virtualized-placeholder[style*="height: 0px"]) { display: none; }
   ${scope} ${redditFeed} > :not(article, shreddit-ad-post, .virtualized-placeholder, faceplate-batch, hr, [slot]) { position: absolute; }
@@ -74,10 +75,10 @@
       hide: [],
       remove: [],
       move: [{ selector: ':is(.SLPe5b, #rso .ULSxyf):has(#eKIzJc)', to: '#rso' }],
-      css: `@media (min-width: 1648px) {
+      css: `@media (min-width: 1468px) {
 ${googleColumns('#rcnt:not(:has(#rhs)):has(#rso .MjjYud ~ .MjjYud)')}
 }
-@media (min-width: 2064px) {
+@media (min-width: 1884px) {
 ${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
   #rcnt:has(#rso .MjjYud ~ .MjjYud) > #rhs { grid-column: 3 !important; width: 372px; margin-left: 44px; }
 }`,
@@ -161,6 +162,15 @@ ${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
       remove: [],
     },
     {
+      id: 'reddit-right-sidebar',
+      site: 'Reddit',
+      name: 'Entire right sidebar',
+      enabled: false,
+      matches: ['https://www.reddit.com/*'],
+      hide: ['#right-sidebar-container'],
+      remove: [],
+    },
+    {
       id: 'reddit-nags',
       site: 'Reddit',
       name: 'Sign-up, app and advertise nags',
@@ -176,15 +186,6 @@ ${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
       remove: [],
     },
     {
-      id: 'reddit-legal-links',
-      site: 'Reddit',
-      name: 'Legal links footer in the right sidebar',
-      enabled: false,
-      matches: ['https://www.reddit.com/*'],
-      hide: ['#right-sidebar-container > .legal-links'],
-      remove: [],
-    },
-    {
       id: 'reddit-columns',
       site: 'Reddit',
       name: 'Feed in columns on wide screens',
@@ -193,10 +194,10 @@ ${googleColumns('#rcnt:has(#rhs):has(#rso .MjjYud ~ .MjjYud)')}
       hide: [],
       remove: [],
       masonry: [`${redditFeed} > :is(article, shreddit-ad-post, .virtualized-placeholder, faceplate-batch)`],
-      css: `@media (min-width: 1600px) {
+      css: `@media (min-width: 1616px) {
 ${redditColumns('.grid-container.flex-nav-collapsed')}
 }
-@media (min-width: 1880px) {
+@media (min-width: 1896px) {
 ${redditColumns('.grid-container')}
 }`,
     },
