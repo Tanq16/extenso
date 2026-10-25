@@ -137,6 +137,7 @@ The popup sets the mode for the current site. Changing it reloads that site's op
 - **Built-in rules** are grouped by site on the options page. All start off except Amazon sponsored results.
 - **Hide selectors** get `display: none` on pages matching the rule.
 - **Remove selectors** delete elements from the page, including ones added after load.
+- **Column rules** lay out Google Search results and the Reddit feed in as many columns as a wide window fits. A narrower window keeps the site's single column.
 - **The popup** lists the rules matching the current page with toggles, and counts the elements hidden and removed.
 - **Declutter this site** in the popup turns Declutter off for the current site. The options page lists those sites.
 
