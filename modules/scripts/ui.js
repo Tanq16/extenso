@@ -20,23 +20,20 @@ export async function availabilityNotice() {
   );
 }
 
+export const runScript = (script, status, target) => async ({ currentTarget: button }) => {
+  button.disabled = true;
+  try {
+    const tab = await target();
+    if (!tab) throw new Error('Open a web page to run the script on.');
+    await messages.send('scripts', 'run', { id: script.id, tabId: tab.id });
+    setStatus(status, `Ran ${script.name} on ${tab.title || tab.url}.`, 'success');
+  } catch (error) {
+    setStatus(status, error.message, 'error');
+  } finally {
+    button.disabled = false;
+  }
+};
+
 export function runButton(script, status, target) {
-  const button = h('button', {
-    type: 'button',
-    className: 'small primary',
-    onclick: async () => {
-      button.disabled = true;
-      try {
-        const tab = await target();
-        if (!tab) throw new Error('Open a web page to run the script on.');
-        await messages.send('scripts', 'run', { id: script.id, tabId: tab.id });
-        setStatus(status, `Ran ${script.name} on ${tab.title || tab.url}.`, 'success');
-      } catch (error) {
-        setStatus(status, error.message, 'error');
-      } finally {
-        button.disabled = false;
-      }
-    },
-  }, icon('play'), 'Run');
-  return button;
+  return h('button', { type: 'button', className: 'small primary', onclick: runScript(script, status, target) }, icon('play'), 'Run');
 }

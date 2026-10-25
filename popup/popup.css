@@ -6,3 +6,8 @@ body {
   min-height: 440px;
   padding: 16px;
 }
+
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tiles > button { justify-content: flex-start; padding: 14px 16px; background-color: var(--mantle); border-radius: var(--radius); }
+.tiles > button:hover { background-color: var(--surface0); }
+.tiles > button .icon { color: var(--blue); }

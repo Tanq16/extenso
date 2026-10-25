@@ -91,7 +91,7 @@ Set the redirect URL on the options page. A URL without a scheme gets `https://`
 | Match patterns | Where an automatic script runs, or where a manual one is offered |
 
 - **Built-in scripts** are grouped by site on the options page. The manual ones for any page start on, and the automatic ones for YouTube and Google Search start off. Customize copies one into your scripts for editing.
-- **Manual scripts** appear with a Run button in the popup on matching pages, and under Run script in the right-click menu. A failure from the menu shows a notification.
+- **Manual scripts** appear as buttons in the popup on matching pages, and under Run script in the right-click menu. A failure from the menu shows a notification.
 - **Automatic scripts** are registered with Chrome and run on every matching page load, each in its own function scope so top-level names never clash. One that Chrome rejects shows a Not registered badge on the options page.
 - **Run on the options page** runs the script on the most recently used web tab.
 
