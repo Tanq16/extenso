@@ -58,7 +58,7 @@ Chrome runs the extension from that folder, so keep it in place. To update, repl
 git clone https://github.com/Tanq16/extenso.git
 ```
 
-Load the cloned folder unpacked, as in steps 2 and 3 above. There is no build step, and `make dev` prints the same instructions.
+Load the cloned folder unpacked, as in steps 2 and 3 above. There is no build step, and `make dev` prints the same instructions. How the code is organized is in [docs/architecture.md](docs/architecture.md).
 
 Building the release zip locally needs `make`, `jq`, and `zip`:
 
@@ -165,5 +165,8 @@ Export on the General tab downloads `extenso-settings-<date>.json`. Siphon captu
 - **Dark mode site fixes** come from Dark Reader for the hosts in `modules/dark/fixes-allowlist.txt`. Other sites may look worse under the dynamic engine.
 - **New site fixes** are pulled by adding a host to the allowlist and running `node tools/sync-darkreader-data.mjs <darkreader-checkout>`.
 - **Personal site fixes** go in `modules/dark/fixes.local.config`, in Dark Reader's fix format.
-- **Dark mode** is ported from Dark Reader, whose MIT license is in `third_party/darkreader/LICENSE`.
-- **Icons** come from Lucide 1.61.0, whose ISC license is in `third_party/lucide/LICENSE`.
+
+## Acknowledgements
+
+- **[Dark Reader](https://github.com/darkreader/darkreader)** is the source of dark mode's engine, detector, and site data, under its MIT license in `third_party/darkreader/LICENSE`. What Extenso took and changed is in [docs/dark-reader.md](docs/dark-reader.md).
+- **[Lucide](https://lucide.dev)** 1.61.0 provides the icons, under its ISC license in `third_party/lucide/LICENSE`.
