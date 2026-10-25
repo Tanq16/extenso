@@ -12,7 +12,7 @@
     manual('show-passwords', 'Show passwords', 'Shows password fields as plain text.'),
     manual('regex-search', 'Regex search', 'Highlights every match of a regular expression on the page. Run again to clear.'),
     manual('copy-markdown', 'Copy as Markdown', 'Copies the selection, or the main content of the page, to the clipboard as Markdown.'),
-    manual('snipe-mode', 'Snipe mode', 'Hides the elements you click, or every element matching a CSS selector. Run again to turn off.'),
+    manual('snipe-mode', 'Snipe mode', 'Deletes the elements you click, or every element matching a CSS selector. Run again to turn off.'),
     {
       id: 'youtube-hide-watched',
       site: 'YouTube',

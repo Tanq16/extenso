@@ -1,7 +1,7 @@
 (() => {
   if (window.__snipeOff) return window.__snipeOff();
   const TARGET = 'data-extenso-snipe';
-  const HELP = 'Snipe mode: click hides. Up and Down pick the parent or child. S hides by CSS selector. Ctrl+Z undoes. Esc exits.';
+  const HELP = 'Snipe mode: click deletes. Up and Down pick the parent or child. S deletes by CSS selector. Ctrl+Z undoes. Esc exits.';
   const PRESSES = ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click'];
 
   const style = document.createElement('style');
@@ -25,30 +25,27 @@
     target?.setAttribute(TARGET, '');
   };
 
-  const hide = (elements) => {
-    const batch = elements.filter((element) => element !== banner).map((element) => [element, element.getAttribute('style')]);
-    for (const [element] of batch) element.style.setProperty('display', 'none', 'important');
-    if (batch.length) batches.push(batch);
+  const remove = (elements) => {
     aim(null);
+    const batch = elements.filter(pickable).map((element) => [element, element.parentNode, element.nextSibling]);
+    for (const [element] of batch) element.remove();
+    if (batch.length) batches.push(batch);
     return batch.length;
   };
 
   const undo = () => {
     const batch = batches.pop();
     if (!batch) return say('Nothing to undo.');
-    for (const [element, value] of batch) {
-      if (value === null) element.removeAttribute('style');
-      else element.setAttribute('style', value);
-    }
+    for (const [element, parent, next] of batch.toReversed()) parent.insertBefore(element, next?.parentNode === parent ? next : null);
     say(`Restored ${count(batch.length)}.`);
   };
 
-  const hideBySelector = () => {
+  const removeBySelector = () => {
     const suggestion = target ? target.localName + [...target.classList].map((name) => `.${CSS.escape(name)}`).join('') : '';
-    const selector = prompt('Hide every element matching this CSS selector:', suggestion);
+    const selector = prompt('Delete every element matching this CSS selector:', suggestion);
     if (!selector) return;
     try {
-      say(`Hid ${count(hide([...document.querySelectorAll(selector)]))} matching ${selector}.`);
+      say(`Deleted ${count(remove([...document.querySelectorAll(selector)]))} matching ${selector}.`);
     } catch {
       say(`Invalid selector: ${selector}`);
     }
@@ -64,7 +61,7 @@
     event.preventDefault();
     event.stopImmediatePropagation();
     if (event.type !== 'click' || !target) return;
-    hide([target]);
+    remove([target]);
     say();
   };
 
@@ -75,7 +72,7 @@
     else if (key === 'arrowup') aim(pickable(target?.parentElement) ? target.parentElement : target);
     else if (key === 'arrowdown') aim([...target?.children ?? []].find((child) => child.contains(hovered)) ?? target);
     else if (key === 'z' && command) undo();
-    else if (key === 's' && !command && !event.altKey) hideBySelector();
+    else if (key === 's' && !command && !event.altKey) removeBySelector();
     else return;
     event.preventDefault();
     event.stopImmediatePropagation();
