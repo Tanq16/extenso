@@ -116,7 +116,8 @@
 
   const hintVerdict = (hint) => {
     const target = document.querySelector(hint.target);
-    return Boolean(target?.matches(hint.match?.join(', ') || ':not(*)')) && !withoutOwnStyles(paintedLight);
+    if (!target?.matches(hint.match?.join(', ') || ':not(*)')) return check();
+    return !withoutOwnStyles(paintedLight);
   };
 
   let cleanup = null;
