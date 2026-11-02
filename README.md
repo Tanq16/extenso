@@ -19,7 +19,7 @@ Siphon reads cookies, headers, request and response bodies, and page storage on 
 - **Siphon** captures a value from a query parameter, header, body, cookie, or web storage whenever a matching request or page appears.
 - **Siphon's DevTools panel** turns any field of a recorded request, cookie, or storage entry into a prefilled rule.
 - **Dark mode** themes light pages and leaves dark ones alone, with a per-site choice of Auto, Always, Invert, or Never.
-- **Declutter** hides or removes page elements by CSS selector on matching URLs, with 33 built-in rules for sites such as Google Search, Reddit, X, and YouTube.
+- **Declutter** hides or removes page elements by CSS selector on matching URLs, with 34 built-in rules for sites such as Google Search, Reddit, X, and YouTube.
 - **Relay** sends the page text, the selection, or a link as JSON to an HTTP endpoint you define.
 - **Settings export and import** moves every module's settings as one JSON file.
 
