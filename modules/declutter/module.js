@@ -354,6 +354,15 @@ ${redditColumns('.grid-container')}
       remove: [],
     },
     {
+      id: 'youtube-hype-shelf',
+      site: 'YouTube',
+      name: '"Top hyped videos of this week" shelf',
+      enabled: false,
+      matches: ['https://www.youtube.com/*'],
+      hide: ['ytd-rich-section-renderer:has(ytd-brand-video-shelf-renderer a[href^="/feed/hype"])'],
+      remove: [],
+    },
+    {
       id: 'youtube-guide-extras',
       site: 'YouTube',
       name: '"More from YouTube" sidebar section and footer',
@@ -368,11 +377,12 @@ ${redditColumns('.grid-container')}
     {
       id: 'youtube-premium-upsells',
       site: 'YouTube',
-      name: 'Premium upsells',
+      name: 'Premium and memberships upsells',
       enabled: false,
       matches: ['https://www.youtube.com/*'],
       hide: [
         'ytd-guide-entry-renderer:has(a[href="/premium"])',
+        'ytd-rich-section-renderer:has(ytd-brand-video-shelf-renderer a[href^="/channel_memberships"])',
         'yt-mealbar-promo-renderer',
         'tp-yt-paper-dialog:has(yt-mealbar-promo-renderer)',
         '.ytp-quality-menu .ytp-menuitem:has(.ytp-premium-label)',
