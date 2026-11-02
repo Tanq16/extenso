@@ -76,7 +76,7 @@ Auto, subframe                          -> follow the top host's cached verdict
 - **Transparent root**: when `html` has a transparent background, grid points that land on `html` read the background of `body`.
 - **Light points**: a page can still read dark when up to a quarter of its grid points read light, so a light cookie banner does not decide the verdict. Dark Reader calls the page light on the first light point.
 - **Declared dark**: a dark `color-scheme` meta, a `dark` class, `data-theme="dark"`, or a matching detector hint counts only while the visible `html` or `body` background is not an opaque light color. Dark Reader trusts the declaration.
-- **Hints**: a detector hint is read once the page loads, and no match reports a light page. Dark Reader acts on the first match and keeps waiting while there is none.
+- **Hints**: a detector hint is read once the page loads. A match reports a dark page, and no match falls back to sampling the page. Dark Reader acts on the first match and keeps waiting while there is none.
 - **Theme switches**: detection reruns when `html` or `body` changes `class` or `data-theme`, the color-scheme meta changes `content`, or the system color scheme changes. Reruns are debounced by 250 ms.
 - **Subframes** run their own detection only when their hint carries `IFRAME`.
 
