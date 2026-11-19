@@ -91,6 +91,24 @@ return { error: String(error?.message ?? error) };
 }
 })()`;
 
+const PROBE = `(() => {
+  let depth = 0;
+  for (let view = window; view !== view.parent; view = view.parent) depth += 1;
+  return { depth, area: innerWidth * innerHeight, selected: getSelection()?.isCollapsed === false };
+})()`;
+
+const contentFrame = async (tabId) => {
+  const frames = (await chrome.userScripts.execute({ target: { tabId, allFrames: true }, js: [{ code: PROBE }] }))
+    .filter(({ result }) => result);
+  const selected = frames.find(({ result }) => result.selected);
+  if (selected) return selected.frameId;
+  const top = frames.find(({ frameId }) => frameId === 0)?.result.area ?? 0;
+  const [deepest] = frames
+    .filter(({ result }) => result.area >= top / 2)
+    .sort((a, b) => b.result.depth - a.result.depth || b.result.area - a.result.area);
+  return deepest?.frameId ?? 0;
+};
+
 const run = async (id, tabId) => {
   const settings = await storage.getSettings('scripts');
   if (!settings.enabled) throw new Error('Scripts are turned off.');
@@ -98,8 +116,9 @@ const run = async (id, tabId) => {
   if (!script) throw new Error('Script not found.');
   if (tabId == null) throw new Error('No tab to run on.');
   if (!(await isAvailable())) throw new Error('Turn on "Allow User Scripts" on the extension\'s details page.');
+  const frameId = script.frame === 'content' ? await contentFrame(tabId) : 0;
   const [injection] = await chrome.userScripts.execute({
-    target: { tabId },
+    target: { tabId, frameIds: [frameId] },
     js: [{ code: guard(await sourceOf(script)) }],
     world: script.world,
   });

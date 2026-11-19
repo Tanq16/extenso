@@ -2,6 +2,7 @@
   const ANY = ['<all_urls>'];
   const manual = (id, name, description, world = 'USER_SCRIPT') =>
     ({ id, site: 'Any page', name, description, enabled: true, trigger: 'manual', world, runAt: 'document_idle', matches: ANY });
+  const inContent = (script) => ({ ...script, frame: 'content' });
 
   const builtins = [
     manual('remove-overlays', 'Remove overlays', 'Hides walls that cover the page, unblurs content, and restores scrolling.'),
@@ -11,10 +12,10 @@
     manual('remove-sticky', 'Remove sticky elements', 'Removes fixed and sticky headers and bars, and restores scrolling.'),
     manual('show-passwords', 'Show passwords', 'Shows password fields as plain text.'),
     manual('regex-search', 'Regex search', 'Highlights every match of a regular expression on the page. Run again to clear.'),
-    manual('copy-markdown', 'Copy as Markdown', 'Copies the selection, or the main content of the page, to the clipboard as Markdown.'),
-    manual('snipe-mode', 'Snipe mode', 'Deletes the elements you click, or every element matching a CSS selector. Run again to turn off.'),
+    inContent(manual('copy-markdown', 'Copy as Markdown', 'Copies the selection, or the main content of the page, to the clipboard as Markdown.')),
+    inContent(manual('snipe-mode', 'Snipe mode', 'Deletes the elements you click, or every element matching a CSS selector. Run again to turn off.')),
     manual('edit-page', 'Edit page', 'Lets you type anywhere on the page. Esc or running again turns it off.'),
-    manual('copy-mode', 'Copy mode', 'Copies the text of every element you click to the clipboard. Esc or running again turns it off.'),
+    inContent(manual('copy-mode', 'Copy mode', 'Copies the text of every element you click to the clipboard. Esc or running again turns it off.')),
     {
       id: 'youtube-hide-watched',
       site: 'YouTube',

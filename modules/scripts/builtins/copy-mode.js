@@ -87,6 +87,7 @@
   addEventListener('mouseover', onOver, true);
   addEventListener('keydown', onKey, true);
   document.documentElement.append(style, banner);
+  window.focus();
   say();
   window.__copyOff = off;
 })();
