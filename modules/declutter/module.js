@@ -2,7 +2,7 @@
   const google = ['https://www.google.com/search*', 'https://www.google.ca/search*'];
   // Chrome ignores max-height on a column flex item inside a multi-column container, so .B6fmyf needs an explicit height.
   const googleColumns = (scope) => `  ${scope} { grid-template-columns: minmax(0, 80px) minmax(0, 1fr) auto !important; padding-right: 44px; }
-  ${scope} > #center_col { grid-column: 2 !important; max-width: none !important; }
+  ${scope} #center_col { grid-column: 2 !important; max-width: none !important; }
   ${scope} :is(#rso, [data-extenso-page]) { columns: 620px; column-gap: 64px; }
   ${scope} :is(#rso, [data-extenso-page]) :is(.MjjYud, .ULSxyf, .SLPe5b) { break-inside: avoid; }
   ${scope} :is(#rso, [data-extenso-page]) .B6fmyf { height: 0; }`;
