@@ -20,13 +20,14 @@ export async function availabilityNotice() {
   );
 }
 
-export const runScript = (script, status, target) => async ({ currentTarget: button }) => {
+export const runScript = (script, status, target, onSuccess) => async ({ currentTarget: button }) => {
   button.disabled = true;
   try {
     const tab = await target();
     if (!tab) throw new Error('Open a web page to run the script on.');
     await messages.send('scripts', 'run', { id: script.id, tabId: tab.id });
     setStatus(status, `Ran ${script.name} on ${tab.title || tab.url}.`, 'success');
+    onSuccess?.();
   } catch (error) {
     setStatus(status, error.message, 'error');
   } finally {
