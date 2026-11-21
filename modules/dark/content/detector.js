@@ -41,6 +41,7 @@
     if (background.r === 24 && background.g === 26 && background.b === 27) return 'themed';
     if (background.a === 1) return lightness(background) > 0.6 ? 'light' : 'dark';
     const text = parseColor(style.color);
+    if (text?.a === 0) return null;
     return !text || lightness(text) < 0.4 ? 'light' : 'dark';
   };
 
@@ -84,6 +85,7 @@
         if (!verdicts.has(element)) verdicts.set(element, sample(element === document.documentElement ? backdrop : getComputedStyle(element)));
         const verdict = verdicts.get(element);
         if (verdict === 'themed') return false;
+        if (!verdict) continue;
         points += 1;
         if (verdict === 'light') light += 1;
       }

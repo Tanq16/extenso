@@ -17,7 +17,7 @@ export async function render(container, tab) {
     ? h('div', { className: 'tiles' }, scripts.map((script) => h('button', {
       type: 'button',
       title: script.description ?? '',
-      onclick: runScript(script, status, async () => tab),
+      onclick: runScript(script, status, async () => tab, () => window.close()),
     }, icon('play'), h('span', { className: 'truncate' }, script.name))))
     : h('p', { className: 'empty' }, 'No scripts for this page.');
 
